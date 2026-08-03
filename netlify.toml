@@ -8,9 +8,3 @@
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=3600"
-
-# 禁止索引管理后台
-[[redirects]]
-  from = "/admin/*"
-  to = "/admin/index.html"
-  status = 200
