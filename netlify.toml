@@ -1,0 +1,16 @@
+# Netlify 部署配置（静态站点，无需构建）
+[build]
+  publish = "."
+  command = "echo 'static site, no build step'"
+
+# 缓存静态资源
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+# 禁止索引管理后台
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200
