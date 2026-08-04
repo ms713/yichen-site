@@ -3,6 +3,10 @@
   publish = "."
   command = "echo 'static site, no build step'"
 
+# Decap CMS 登录授权云函数所在目录
+[functions]
+  directory = "netlify/functions"
+
 # 缓存静态资源
 [[headers]]
   for = "/assets/*"
