@@ -126,7 +126,8 @@
     "posters": [
       "assets/images/poster1.jpg",
       "assets/images/poster2.jpg",
-      "assets/images/poster3.jpg"
+      "assets/images/poster3.jpg",
+      "assets/images/case1.jpg"
     ]
   },
   "final": {
@@ -147,7 +148,6 @@
   "images": {
     "hero": "assets/images/hero.jpg",
     "flagship": "assets/images/flagship.jpg",
-    "caseMain": "assets/images/case1.jpg",
     "wechat": "assets/images/wechat-qrcode.png"
   }
 }

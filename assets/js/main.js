@@ -151,7 +151,7 @@
         var s = document.createElement('span'); s.className = 'client-tag'; s.textContent = t; ct.appendChild(s);
       });
     }
-    setImg('caseMain', c.images && c.images.caseMain);
+    // 客户案例区块已不放照片（统一在 sharing 区块展示）
     var tg = el('testiGrid');
     if (tg && c.clients.testi) {
       tg.innerHTML = '';
