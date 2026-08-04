@@ -9,7 +9,9 @@ backend:
   name: github
   repo: ms713/yichen-site
   branch: main
-  auth_type: implicit
+  # 走我们的云函数做 OAuth 转发（implicit flow：浏览器直接跳转，token 回到 URL hash）
+  base_url: https://yinchen.netlify.app
+  auth_endpoint: api/auth
   app_id: Ov23lihuWlVNs5RTZ7cI
 
 # 媒体文件（海报 / 案例图 / 二维码等）存放位置
