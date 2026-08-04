@@ -199,10 +199,11 @@ section { padding:84px 0; }
 
 /* ---------- Sharing ---------- */
 .share-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:14px; }
+.share-grid.share-list { grid-template-columns:1fr; max-width:520px; margin-left:auto; margin-right:auto; }
 .poster {
   width:100%; border-radius:var(--radius); border:1px solid var(--gold-line);
   transition:transform .3s var(--ease),box-shadow .3s var(--ease); cursor:pointer;
-  aspect-ratio:760 / 1280; /* 强制统一宽高比，三张海报完全等高 */
+  aspect-ratio:760 / 1280; /* 默认原海报比例；JS 会按 content.json 的 ratio 覆盖 */
   object-fit:cover;
 }
 .poster:hover { transform:translateY(-6px); box-shadow:0 22px 50px rgba(0,0,0,.5); }

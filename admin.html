@@ -115,6 +115,22 @@
     parent.appendChild(lab);
   }
 
+  /* ---------- 下拉选择字段 ---------- */
+  function selectField(parent, label, getVal, setVal, options) {
+    var lab = document.createElement('label'); lab.className = 'adm-field';
+    lab.appendChild(document.createTextNode(label));
+    var sel = document.createElement('select');
+    options.forEach(function (o) {
+      var opt = document.createElement('option');
+      opt.value = o.value; opt.textContent = o.label;
+      if (o.value === (getVal() || '')) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', function () { setVal(sel.value); });
+    lab.appendChild(sel);
+    parent.appendChild(lab);
+  }
+
   /* ---------- 单张图片上传 ---------- */
   function imageField(parent, label, getVal, setVal) {
     var lab = document.createElement('label'); lab.className = 'adm-field';
@@ -357,6 +373,19 @@
 
     section('线上分享海报', function (c) {
       field(c, '标题', function () { return content.sharing.heading; }, function (v) { content.sharing.heading = v; });
+      selectField(c, '排列方式', function () { return content.sharing.layout || 'grid'; }, function (v) { content.sharing.layout = v; }, [
+        { value: 'grid', label: '三列网格' },
+        { value: 'list', label: '单列（竖向一排）' }
+      ]);
+      selectField(c, '照片比例', function () { return content.sharing.ratio || '760/1280'; }, function (v) { content.sharing.ratio = v; }, [
+        { value: '760/1280', label: '原海报比例 (760×1280)' },
+        { value: '1/1', label: '1:1 方形' },
+        { value: '3/4', label: '3:4 竖图' },
+        { value: '4/5', label: '4:5 竖图' },
+        { value: '4/3', label: '4:3 横图' },
+        { value: '16/9', label: '16:9 宽屏' },
+        { value: '9/16', label: '9:16 手机长图' }
+      ]);
       var tip = document.createElement('p'); tip.className = 'adm-tip'; tip.textContent = '拖拽可调整海报顺序，上传可替换图片：';
       c.appendChild(tip);
       imageListEditor(c, function () { return content.sharing.posters; });

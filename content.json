@@ -123,6 +123,8 @@
   "sharing": {
     "kicker": "SHARING & TALKS",
     "heading": "线上分享与公开课",
+    "layout": "grid",
+    "ratio": "760/1280",
     "posters": [
       "assets/images/poster1.jpg",
       "assets/images/poster2.jpg",

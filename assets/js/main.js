@@ -167,10 +167,12 @@
     setText('sharingHeading', c.sharing.heading);
     var sh = el('shareGrid');
     if (sh && c.sharing.posters) {
+      sh.className = 'share-grid reveal' + (c.sharing.layout === 'list' ? ' share-list' : '');
       sh.innerHTML = '';
+      var ratio = (c.sharing.ratio || '760/1280').replace('/', ' / ');
       c.sharing.posters.forEach(function (src) {
         var img = document.createElement('img'); img.className = 'poster'; img.src = src || '';
-        img.alt = '线上分享海报'; sh.appendChild(img);
+        img.alt = '线上分享海报'; img.style.aspectRatio = ratio; sh.appendChild(img);
       });
     }
 
