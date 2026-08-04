@@ -55,7 +55,15 @@ exports.handler = async (event) => {
     return handleCodeFlow(qs);
   }
 
-  return errPage("未知请求", JSON.stringify(qs));
+  // ============ GitHub implicit flow 回调 ============
+  // 关键坑：implicit flow 的 token 在 URL 的 #fragment 里，浏览器不会把 fragment 发给服务器。
+  // 所以 GitHub 跳回 /api/auth#access_token=... 时，服务器收到的请求没有任何 query 参数。
+  // 这种情况必须返回 popupHtml，让其中的 JS 读取 window.location.hash 并发 success 给父窗口。
+  if (qs.error) {
+    return errPage("GitHub 授权失败：" + (qs.error_description || qs.error), "");
+  }
+  // 兜底：任何其余请求（含 GitHub 回调）都返回 popupHtml
+  return popupHtml();
 };
 
 async function handleCodeFlow(qs) {
@@ -109,24 +117,32 @@ function popupHtml() {
     var scope = params.get("scope") || "repo";
     var tokenType = params.get("token_type") || "bearer";
 
-    document.getElementById("status").innerHTML = "<p>登录成功，正在返回后台...</p>";
-
-    if (token && window.opener && !window.opener.closed) {
-      // 发 authorization:github:success:... 给父窗口（NetlifyAuthenticator 协议要求）
+    if (token) {
       var data = JSON.stringify({ token: token, provider: "github", scope: scope });
-      try {
-        window.opener.postMessage("authorization:github:success:" + data, PARENT_ORIGIN);
-      } catch (e) {
-        console.error("postMessage failed", e);
+      document.getElementById("status").innerHTML = "<p>登录成功，正在返回后台...</p>";
+
+      // 主路径：postMessage 给父窗口（NetlifyAuthenticator 协议要求）
+      var posted = false;
+      if (window.opener && !window.opener.closed) {
+        try {
+          window.opener.postMessage("authorization:github:success:" + data, PARENT_ORIGIN);
+          posted = true;
+        } catch (e) {
+          console.error("postMessage failed", e);
+        }
       }
-      setTimeout(function() { try { window.close(); } catch(e) {} }, 200);
-    } else if (token) {
-      document.getElementById("status").innerHTML =
-        '<p class="err">登录成功，但找不到父窗口（可能已关闭）。</p>' +
-        '<p>请直接关闭此窗口，<a href="${BASE}/admin/">点此重新打开后台</a>。</p>';
-    } else {
-      document.getElementById("status").innerHTML = '<p class="err">授权失败</p>';
+      // 兜底：写入 localStorage（主路径成功则清掉，避免下次误触发）
+      // 父窗口的 storage 事件监听器会接管登录，即便 window.opener 为 null 也能进后台
+      try {
+        if (posted) localStorage.removeItem("decap_oauth_token");
+        else localStorage.setItem("decap_oauth_token", data);
+      } catch (e) {}
+
+      setTimeout(function() { try { window.close(); } catch(e) {} }, 400);
+      return;
     }
+
+    document.getElementById("status").innerHTML = '<p class="err">授权失败：未获取到 token</p>';
     return;
   }
 

@@ -65,6 +65,26 @@
       }
     };
 
+    // ===== 额外兜底：监听 localStorage 的 storage 事件 =====
+    // 弹窗（popup）在拿到 token 后会把 token 写入 localStorage。即使浏览器把弹窗的
+    // window.opener 置空（postMessage 传不回主窗口），父窗口也能通过 storage 事件收到通知，
+    // 再派发 success 消息给 Decap 完成登录。
+    window.addEventListener('storage', function(e) {
+      if (e.key === 'decap_oauth_token' && e.newValue) {
+        try {
+          var pd = JSON.parse(e.newValue);
+          var payload = JSON.stringify({ token: pd.token, provider: pd.provider, scope: pd.scope });
+          window.dispatchEvent(new MessageEvent('message', {
+            data: 'authorization:github:success:' + payload
+          }));
+          localStorage.removeItem('decap_oauth_token');
+          console.log('[Decap OAuth Recovery] storage 事件触发，已注入 token。');
+        } catch (err) {
+          console.error('[Decap OAuth Recovery] storage 解析失败', err);
+        }
+      }
+    });
+
     // ===== Step 2: 拦截 window.open 处理 popup 行为 =====
     var origOpen = window.open ? window.open.bind(window) : null;
     if (origOpen) {
