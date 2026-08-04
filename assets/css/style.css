@@ -311,7 +311,7 @@ section { padding:84px 0; }
 /* ---------- 响应式 ---------- */
 @media (max-width:980px){
   .hero-grid { grid-template-columns:1fr; gap:40px; }
-  .adv-grid,.course-grid,.sys-grid,.cases,.testi { grid-template-columns:repeat(2,1fr); }
+  .adv-grid,.course-grid,.sys-grid,.testi { grid-template-columns:repeat(2,1fr); }
   /* 海报区保持3列，不折叠（海报已统一尺寸） */
   .share-grid { grid-template-columns:repeat(3,1fr); gap:16px; }
   /* 标签区：平板端3列 */
@@ -327,7 +327,7 @@ section { padding:84px 0; }
   section { padding:60px 0; }
   .hero h1 { font-size:34px; }
   .h-sec { font-size:26px; }
-  .adv-grid,.course-grid,.sys-grid,.cases,.testi { grid-template-columns:1fr; }
+  .adv-grid,.course-grid,.sys-grid,.testi { grid-template-columns:1fr; }
   /* 移动端海报改为纵向堆叠 */
   .share-grid { grid-template-columns:1fr; max-width:360px; margin-left:auto;margin-right:auto; }
   /* 标签区：手机端2列 */
