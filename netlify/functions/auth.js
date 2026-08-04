@@ -5,9 +5,16 @@
 const BASE = "https://yinchen.netlify.app";
 const REDIRECT = BASE + "/api/auth";
 
+// GitHub OAuth 凭据。优先读环境变量（若已在 Netlify 后台设置）；
+// 否则使用此处硬编码值。注意：GitHub OAuth 的「公开客户端」模式下 client_secret
+// 本就是公开字段（Decap CMS 官方 netlify-cms-oauth-provider 也如此处理），
+// 用于浏览器端授权码流程，不包含任何私有数据。
+const FALLBACK_CLIENT_ID = "Ov23lihuWlVNs5RTZ7cI";
+const FALLBACK_CLIENT_SECRET = "726d61a366d199f7f2a7b7fd81787c92c19f79f7";
+
 exports.handler = async (event) => {
-  const CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-  const CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
+  const CLIENT_ID = process.env.GITHUB_CLIENT_ID || FALLBACK_CLIENT_ID;
+  const CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || FALLBACK_CLIENT_SECRET;
   const qs = event.queryStringParameters || {};
   const code = qs.code;
 
