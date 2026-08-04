@@ -351,9 +351,7 @@
       field(c, '标题', function () { return content.clients.heading; }, function (v) { content.clients.heading = v; }, true);
       field(c, '副标题', function () { return content.clients.sub; }, function (v) { content.clients.sub = v; }, true);
       stringListEditor(c, function () { return content.clients.tags; }, '客户类型', '添加类型');
-      imageField(c, '客户照片 1', function () { return content.images.case1; }, function (v) { content.images.case1 = v; });
-      imageField(c, '客户照片 2', function () { return content.images.case2; }, function (v) { content.images.case2 = v; });
-      imageField(c, '客户照片 3', function () { return content.images.case3; }, function (v) { content.images.case3 = v; });
+      imageField(c, '客户案例主图（单图满铺）', function () { return content.images.caseMain; }, function (v) { content.images.caseMain = v; });
       listEditor(c, function () { return content.clients.testi; },
         function () { return [{ key: 'text', label: '评价内容', type: 'textarea' }, { key: 'who', label: '评价人' }]; }, '添加评价');
     });

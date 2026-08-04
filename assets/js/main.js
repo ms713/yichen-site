@@ -151,9 +151,7 @@
         var s = document.createElement('span'); s.className = 'client-tag'; s.textContent = t; ct.appendChild(s);
       });
     }
-    setImg('case1', c.images && c.images.case1);
-    setImg('case2', c.images && c.images.case2);
-    setImg('case3', c.images && c.images.case3);
+    setImg('caseMain', c.images && c.images.caseMain);
     var tg = el('testiGrid');
     if (tg && c.clients.testi) {
       tg.innerHTML = '';

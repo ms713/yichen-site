@@ -147,9 +147,7 @@
   "images": {
     "hero": "assets/images/hero.jpg",
     "flagship": "assets/images/flagship.jpg",
-    "case1": "assets/images/case1.jpg",
-    "case2": "assets/images/case2.jpg",
-    "case3": "assets/images/case3.jpg",
+    "caseMain": "assets/images/case1.jpg",
     "wechat": "assets/images/wechat-qrcode.png"
   }
 }
