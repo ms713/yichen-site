@@ -12,6 +12,8 @@ backend:
   # 走我们的云函数做 OAuth 转发（implicit flow：浏览器直接跳转，token 回到 URL hash）
   base_url: https://yinchen.netlify.app
   auth_endpoint: api/auth
+  # 关键：强制 implicit flow，避免 Decap 默认用 explicit code flow（弹窗 + postMessage，会失败）
+  auth_type: implicit
   app_id: Ov23lihuWlVNs5RTZ7cI
 
 # 媒体文件（海报 / 案例图 / 二维码等）存放位置
