@@ -63,7 +63,12 @@ exports.handler = async (event) => {
     return errPage("GitHub 授权失败：" + (qs.error_description || qs.error), "");
   }
   // 兜底：任何其余请求（含 GitHub 回调）都返回 popupHtml
-  return popupHtml();
+  // 注意必须包成 lambda 响应对象（statusCode/headers/body），否则 Netlify 报 502
+  return {
+    statusCode: 200,
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+    body: popupHtml()
+  };
 };
 
 async function handleCodeFlow(qs) {
