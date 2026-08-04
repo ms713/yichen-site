@@ -9,8 +9,8 @@ backend:
   name: github
   repo: ms713/yichen-site
   branch: main
-  base_url: https://yinchen.netlify.app
-  auth_endpoint: api/auth
+  auth_type: implicit
+  app_id: Ov23lihuWlVNs5RTZ7cI
 
 # 媒体文件（海报 / 案例图 / 二维码等）存放位置
 media_folder: "assets/images"
