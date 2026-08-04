@@ -22,213 +22,215 @@ locale: "zh-Hans"
 collections:
   - name: "site"
     label: "全站内容"
-    label_singular: "全站内容"
-    description: "编辑网站所有文字、课程、认证与图片，保存即发布"
-    file: "content.json"
-    fields:
-      - { name: siteTitle, label: "网站标题（浏览器标签）", widget: string, hint: "显示在浏览器标签页上的文字" }
-
-      # ---------- 首屏 Hero ----------
-      - name: hero
-        label: "首屏 Hero"
-        widget: object
+    files:
+      - name: "site"
+        label: "全站内容"
+        file: "content.json"
+        description: "编辑网站所有文字、课程、认证与图片，保存即发布"
         fields:
-          - { name: kicker, label: "上方小标签", widget: string, hint: "例如：AI 效率教练 · 企业数字化转型顾问" }
-          - { name: title, label: "主标题", widget: string }
-          - { name: sub, label: "副标题 / 简介", widget: text }
-          - name: stats
-            label: "数据指标（3 个）"
-            widget: list
-            summary: "{{fields.num}} {{fields.label}}"
-            fields:
-              - { name: num, label: "数字", widget: string }
-              - { name: label, label: "说明", widget: string }
+          - { name: siteTitle, label: "网站标题（浏览器标签）", widget: string, hint: "显示在浏览器标签页上的文字" }
 
-      # ---------- 媒体背书 ----------
-      - name: media
-        label: "媒体背书"
-        widget: object
-        fields:
-          - { name: title, label: "标题", widget: string }
-          - name: btns
-            label: "媒体按钮"
-            widget: list
-            summary: "{{fields.label}}"
+          # ---------- 首屏 Hero ----------
+          - name: hero
+            label: "首屏 Hero"
+            widget: object
             fields:
-              - { name: label, label: "按钮文字", widget: string }
-              - { name: href, label: "跳转链接", widget: string }
-              - { name: alt, label: "次要样式（灰底）", widget: boolean, default: false }
-              - { name: icon, label: "显示播放图标", widget: boolean, default: false }
+              - { name: kicker, label: "上方小标签", widget: string, hint: "例如：AI 效率教练 · 企业数字化转型顾问" }
+              - { name: title, label: "主标题", widget: string }
+              - { name: sub, label: "副标题 / 简介", widget: text }
+              - name: stats
+                label: "数据指标（3 个）"
+                widget: list
+                summary: "{{fields.num}} {{fields.label}}"
+                fields:
+                  - { name: num, label: "数字", widget: string }
+                  - { name: label, label: "说明", widget: string }
 
-      # ---------- 关于尹辰 ----------
-      - name: about
-        label: "关于尹辰"
-        widget: object
-        fields:
-          - { name: heading, label: "小标题 / 引言", widget: string }
-          - name: bio
-            label: "个人简介（段落）"
-            widget: list
-            field: { label: "段落", widget: text }
-          - { name: callout, label: "高亮金句", widget: string }
-          - name: advCards
-            label: "优势卡片"
-            widget: list
-            summary: "{{fields.title}}"
-            fields:
-              - { name: ic, label: "图标符号", widget: string, hint: "可填 ◎ ◈ ✦ ▲ 等符号" }
-              - { name: title, label: "标题", widget: string }
-              - { name: desc, label: "描述", widget: text }
-
-      # ---------- 课程体系 ----------
-      - name: courses
-        label: "课程体系"
-        widget: object
-        fields:
-          - { name: heading, label: "板块标题", widget: string }
-          - { name: sub, label: "板块副标题", widget: text }
-          - name: list
-            label: "课程卡片"
-            widget: list
-            summary: "{{fields.title}}"
-            hint: "可拖拽排序、增删；顺序即页面展示顺序"
-            fields:
-              - { name: title, label: "课程名", widget: string }
-              - { name: desc, label: "简介", widget: text }
-          - name: topics
-            label: "热门授课主题"
-            widget: list
-            field: { label: "主题", widget: string }
-          - name: entBanner
-            label: "企业内训横幅"
+          # ---------- 媒体背书 ----------
+          - name: media
+            label: "媒体背书"
             widget: object
             fields:
               - { name: title, label: "标题", widget: string }
-              - { name: desc, label: "描述", widget: text }
-              - { name: btn, label: "按钮文字", widget: string }
+              - name: btns
+                label: "媒体按钮"
+                widget: list
+                summary: "{{fields.label}}"
+                fields:
+                  - { name: label, label: "按钮文字", widget: string }
+                  - { name: href, label: "跳转链接", widget: string }
+                  - { name: alt, label: "次要样式（灰底）", widget: boolean, default: false }
+                  - { name: icon, label: "显示播放图标", widget: boolean, default: false }
 
-      # ---------- 数字化交付 ----------
-      - name: system
-        label: "数字化系统交付"
-        widget: object
-        fields:
-          - { name: kicker, label: "上方小标签", widget: string }
-          - { name: heading, label: "板块标题", widget: string }
-          - { name: sub, label: "板块副标题", widget: text }
-          - name: cards
-            label: "交付卡片"
-            widget: list
-            summary: "{{fields.title}}"
+          # ---------- 关于尹辰 ----------
+          - name: about
+            label: "关于尹辰"
+            widget: object
             fields:
-              - { name: ic, label: "图标符号", widget: string }
-              - { name: title, label: "标题", widget: string }
-              - { name: desc, label: "描述", widget: text }
+              - { name: heading, label: "小标题 / 引言", widget: string }
+              - name: bio
+                label: "个人简介（段落）"
+                widget: list
+                field: { name: para, label: "段落", widget: text }
+              - { name: callout, label: "高亮金句", widget: string }
+              - name: advCards
+                label: "优势卡片"
+                widget: list
+                summary: "{{fields.title}}"
+                fields:
+                  - { name: ic, label: "图标符号", widget: string, hint: "可填 ◎ ◈ ✦ ▲ 等符号" }
+                  - { name: title, label: "标题", widget: string }
+                  - { name: desc, label: "描述", widget: text }
 
-      # ---------- 专业认证 ----------
-      - name: certs
-        label: "专业认证"
-        widget: object
-        fields:
-          - { name: heading, label: "板块标题", widget: string }
-          - { name: sub, label: "板块副标题", widget: text }
-          - { name: highlight, label: "高亮头衔", widget: string, hint: "例如：★ AIGC 技能导师" }
-          - name: list
-            label: "认证列表"
-            widget: list
-            field: { label: "认证名称", widget: string }
-
-      # ---------- 旗舰案例 ----------
-      - name: flagship
-        label: "旗舰案例"
-        widget: object
-        fields:
-          - { name: kicker, label: "上方小标签", widget: string }
-          - { name: heading, label: "板块标题", widget: string }
-          - { name: text, label: "案例描述", widget: text }
-          - name: deliver
-            label: "交付物清单"
-            widget: list
-            field: { label: "交付项", widget: string }
-
-      # ---------- 客户案例 ----------
-      - name: clients
-        label: "客户案例"
-        widget: object
-        fields:
-          - { name: heading, label: "板块标题", widget: string }
-          - { name: sub, label: "板块副标题", widget: text }
-          - name: tags
-            label: "客户类型标签"
-            widget: list
-            field: { label: "标签", widget: string }
-          - name: testi
-            label: "客户评价"
-            widget: list
-            summary: "{{fields.who}}"
+          # ---------- 课程体系 ----------
+          - name: courses
+            label: "课程体系"
+            widget: object
             fields:
-              - { name: text, label: "评价内容", widget: text }
-              - { name: who, label: "评价人", widget: string }
+              - { name: heading, label: "板块标题", widget: string }
+              - { name: sub, label: "板块副标题", widget: text }
+              - name: list
+                label: "课程卡片"
+                widget: list
+                summary: "{{fields.title}}"
+                hint: "可拖拽排序、增删；顺序即页面展示顺序"
+                fields:
+                  - { name: title, label: "课程名", widget: string }
+                  - { name: desc, label: "简介", widget: text }
+              - name: topics
+                label: "热门授课主题"
+                widget: list
+                field: { name: topic, label: "主题", widget: string }
+              - name: entBanner
+                label: "企业内训横幅"
+                widget: object
+                fields:
+                  - { name: title, label: "标题", widget: string }
+                  - { name: desc, label: "描述", widget: text }
+                  - { name: btn, label: "按钮文字", widget: string }
 
-      # ---------- 线上分享 ----------
-      - name: sharing
-        label: "线上分享"
-        widget: object
-        fields:
-          - { name: kicker, label: "上方小标签", widget: string }
-          - { name: heading, label: "板块标题", widget: string }
-          - name: layout
-            label: "排列方式"
-            widget: select
-            options:
-              - { label: "三列网格（一排多张）", value: "grid" }
-              - { label: "单列竖排（一张接一张）", value: "list" }
-            hint: "三列网格 = 多张并排；单列 = 竖着一张张往下排"
-          - name: ratio
-            label: "照片比例"
-            widget: select
-            options:
-              - { label: "原海报 760×1280（竖版）", value: "760/1280" }
-              - { label: "1:1 方形", value: "1/1" }
-              - { label: "3:4 竖版", value: "3/4" }
-              - { label: "4:5 竖版", value: "4/5" }
-              - { label: "4:3 横版", value: "4/3" }
-              - { label: "16:9 宽屏", value: "16/9" }
-              - { label: "9:16 竖屏", value: "9/16" }
-            hint: "选择海报显示比例，改完即可见"
-          - name: posters
-            label: "分享海报"
-            widget: list
-            field: { label: "海报图片", widget: image }
-
-      # ---------- 底部 CTA ----------
-      - name: final
-        label: "底部 CTA"
-        widget: object
-        fields:
-          - { name: heading, label: "标题", widget: string }
-          - { name: sub, label: "副标题", widget: text }
-
-      # ---------- 页脚 ----------
-      - name: footer
-        label: "页脚"
-        widget: object
-        fields:
-          - { name: brand, label: "落款名", widget: string }
-          - { name: role, label: "身份副标题", widget: string }
-          - { name: email, label: "联系邮箱", widget: string }
-          - name: nav
-            label: "快速导航"
-            widget: list
-            summary: "{{fields.label}}"
+          # ---------- 数字化交付 ----------
+          - name: system
+            label: "数字化系统交付"
+            widget: object
             fields:
-              - { name: label, label: "文字", widget: string }
-              - { name: href, label: "锚点", widget: string, hint: "例如 #about" }
+              - { name: kicker, label: "上方小标签", widget: string }
+              - { name: heading, label: "板块标题", widget: string }
+              - { name: sub, label: "板块副标题", widget: text }
+              - name: cards
+                label: "交付卡片"
+                widget: list
+                summary: "{{fields.title}}"
+                fields:
+                  - { name: ic, label: "图标符号", widget: string }
+                  - { name: title, label: "标题", widget: string }
+                  - { name: desc, label: "描述", widget: text }
 
-      # ---------- 图片资源 ----------
-      - name: images
-        label: "图片资源"
-        widget: object
-        fields:
-          - { name: hero, label: "首屏形象照", widget: image }
-          - { name: flagship, label: "旗舰案例配图", widget: image }
-          - { name: wechat, label: "微信二维码", widget: image }
+          # ---------- 专业认证 ----------
+          - name: certs
+            label: "专业认证"
+            widget: object
+            fields:
+              - { name: heading, label: "板块标题", widget: string }
+              - { name: sub, label: "板块副标题", widget: text }
+              - { name: highlight, label: "高亮头衔", widget: string, hint: "例如：★ AIGC 技能导师" }
+              - name: list
+                label: "认证列表"
+                widget: list
+                field: { name: cert, label: "认证名称", widget: string }
+
+          # ---------- 旗舰案例 ----------
+          - name: flagship
+            label: "旗舰案例"
+            widget: object
+            fields:
+              - { name: kicker, label: "上方小标签", widget: string }
+              - { name: heading, label: "板块标题", widget: string }
+              - { name: text, label: "案例描述", widget: text }
+              - name: deliver
+                label: "交付物清单"
+                widget: list
+                field: { name: item, label: "交付项", widget: string }
+
+          # ---------- 客户案例 ----------
+          - name: clients
+            label: "客户案例"
+            widget: object
+            fields:
+              - { name: heading, label: "板块标题", widget: string }
+              - { name: sub, label: "板块副标题", widget: text }
+              - name: tags
+                label: "客户类型标签"
+                widget: list
+                field: { name: tag, label: "标签", widget: string }
+              - name: testi
+                label: "客户评价"
+                widget: list
+                summary: "{{fields.who}}"
+                fields:
+                  - { name: text, label: "评价内容", widget: text }
+                  - { name: who, label: "评价人", widget: string }
+
+          # ---------- 线上分享 ----------
+          - name: sharing
+            label: "线上分享"
+            widget: object
+            fields:
+              - { name: kicker, label: "上方小标签", widget: string }
+              - { name: heading, label: "板块标题", widget: string }
+              - name: layout
+                label: "排列方式"
+                widget: select
+                options:
+                  - { label: "三列网格（一排多张）", value: "grid" }
+                  - { label: "单列竖排（一张接一张）", value: "list" }
+                hint: "三列网格 = 多张并排；单列 = 竖着一张张往下排"
+              - name: ratio
+                label: "照片比例"
+                widget: select
+                options:
+                  - { label: "原海报 760×1280（竖版）", value: "760/1280" }
+                  - { label: "1:1 方形", value: "1/1" }
+                  - { label: "3:4 竖版", value: "3/4" }
+                  - { label: "4:5 竖版", value: "4/5" }
+                  - { label: "4:3 横版", value: "4/3" }
+                  - { label: "16:9 宽屏", value: "16/9" }
+                  - { label: "9:16 竖屏", value: "9/16" }
+                hint: "选择海报显示比例，改完即可见"
+              - name: posters
+                label: "分享海报"
+                widget: list
+                field: { name: poster, label: "海报图片", widget: image }
+
+          # ---------- 底部 CTA ----------
+          - name: final
+            label: "底部 CTA"
+            widget: object
+            fields:
+              - { name: heading, label: "标题", widget: string }
+              - { name: sub, label: "副标题", widget: text }
+
+          # ---------- 页脚 ----------
+          - name: footer
+            label: "页脚"
+            widget: object
+            fields:
+              - { name: brand, label: "落款名", widget: string }
+              - { name: role, label: "身份副标题", widget: string }
+              - { name: email, label: "联系邮箱", widget: string }
+              - name: nav
+                label: "快速导航"
+                widget: list
+                summary: "{{fields.label}}"
+                fields:
+                  - { name: label, label: "文字", widget: string }
+                  - { name: href, label: "锚点", widget: string, hint: "例如 #about" }
+
+          # ---------- 图片资源 ----------
+          - name: images
+            label: "图片资源"
+            widget: object
+            fields:
+              - { name: hero, label: "首屏形象照", widget: image }
+              - { name: flagship, label: "旗舰案例配图", widget: image }
+              - { name: wechat, label: "微信二维码", widget: image }
