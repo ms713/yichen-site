@@ -49,8 +49,10 @@
   .adm-field input:focus, .adm-field textarea:focus { border-color:#e8c268; }
   .adm-field textarea { resize:vertical; min-height:62px; }
   .adm-field input[type=checkbox] { width:16px; height:16px; vertical-align:middle; margin-left:6px; }
-  .adm-imgprev { display:block; width:120px; max-height:160px; object-fit:contain; border-radius:8px;
-    border:1px solid rgba(255,255,255,.1); margin:6px 0; background:#0a1422; }
+  .adm-imgprev { display:block; max-width:280px; max-height:360px; width:auto; height:auto;
+    object-fit:contain; border-radius:8px; border:1px solid rgba(255,255,255,.1);
+    margin:6px 0; background:#0a1422; cursor:zoom-in; transition:transform .2s; }
+  .adm-imgprev:hover { transform:scale(1.03); }
 
   .adm-item { background:#0d1a30; border:1px solid rgba(255,255,255,.08); border-radius:10px;
     padding:14px 14px 8px; margin-bottom:12px; cursor:grab; }
@@ -75,7 +77,6 @@
     <p>请输入编辑密码进入</p>
     <input type="password" id="pwInput" placeholder="编辑密码" autofocus>
     <button id="pwBtn">进入编辑</button>
-    <p class="gate-hint">默认密码 yc2026（可在 admin.html 顶部 ADMIN_PW 修改）</p>
   </div>
 </div>
 
