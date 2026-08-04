@@ -22,7 +22,12 @@ exports.handler = async (event) => {
   if (!code && !error && responseType === "token") {
     const gh = new URL("https://github.com/login/oauth/authorize");
     gh.searchParams.set("client_id", qs.client_id || CLIENT_ID);
-    gh.searchParams.set("redirect_uri", qs.redirect_uri || ADMIN_URL);
+    // 规范化 redirect_uri：去掉末尾斜杠
+    // GitHub OAuth App callback URL 存储时会规范化末尾斜杠（/admin/ 存为 /admin）
+    // Decap 发的可能是 /admin/，所以统一去掉斜杠以确保匹配
+    let redirectUri = qs.redirect_uri || ADMIN_URL;
+    redirectUri = redirectUri.replace(/\/+$/, "");
+    gh.searchParams.set("redirect_uri", redirectUri);
     gh.searchParams.set("response_type", "token");
     gh.searchParams.set("scope", qs.scope || "repo");
     if (qs.state) gh.searchParams.set("state", qs.state);
