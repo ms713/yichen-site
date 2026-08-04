@@ -7,6 +7,12 @@
 [functions]
   directory = "netlify/functions"
 
+# 将 /api/auth 重写为登录云函数（Decap GitHub 后端回调地址）
+[[redirects]]
+  from = "/api/auth"
+  to = "/.netlify/functions/auth"
+  status = 200
+
 # 缓存静态资源
 [[headers]]
   for = "/assets/*"

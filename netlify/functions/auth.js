@@ -3,7 +3,7 @@
 // 客户端密钥只读环境变量（GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET），不进代码库。
 
 const BASE = "https://yinchen.netlify.app";
-const REDIRECT = BASE + "/.netlify/functions/auth";
+const REDIRECT = BASE + "/api/auth";
 
 exports.handler = async (event) => {
   const CLIENT_ID = process.env.GITHUB_CLIENT_ID;
@@ -30,7 +30,7 @@ exports.handler = async (event) => {
         "<!doctype html><html><head><meta charset=\"utf-8\"></head><body><script>" +
         "(function(){" +
         "var t=" + JSON.stringify(token) + ";" +
-        "try{(window.opener||window.parent).postMessage({token:t}, window.location.origin);}catch(e){}" +
+        "try{(window.opener||window.parent).postMessage({token:t, provider:'github'}, window.location.origin);}catch(e){}" +
         "setTimeout(function(){window.close();},300);" +
         "})();" +
         "</script></body></html>";

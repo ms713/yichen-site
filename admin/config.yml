@@ -1,13 +1,16 @@
 # ============================================================
 # 尹辰官网 · Decap CMS 配置
-# 后台地址：你的域名/admin/
-# 登录方式：Netlify Identity（邮箱邀请 / 或开启 GitHub 登录）
-# 保存即自动写回 GitHub → Netlify 自动重新部署上线
+# 后台地址：https://yinchen.netlify.app/admin/
+# 登录方式：GitHub 账号登录（用你自己的 GitHub 授权，仅你自己能进）
+# 保存即自动写回 GitHub(main) → Netlify 自动重新部署上线
 # ============================================================
 
 backend:
-  name: git-gateway
+  name: github
+  repo: ms713/yichen-site
   branch: main
+  base_url: https://yinchen.netlify.app
+  auth_endpoint: api/auth
 
 # 媒体文件（海报 / 案例图 / 二维码等）存放位置
 media_folder: "assets/images"
@@ -173,6 +176,25 @@ collections:
         fields:
           - { name: kicker, label: "上方小标签", widget: string }
           - { name: heading, label: "板块标题", widget: string }
+          - name: layout
+            label: "排列方式"
+            widget: select
+            options:
+              - { label: "三列网格（一排多张）", value: "grid" }
+              - { label: "单列竖排（一张接一张）", value: "list" }
+            hint: "三列网格 = 多张并排；单列 = 竖着一张张往下排"
+          - name: ratio
+            label: "照片比例"
+            widget: select
+            options:
+              - { label: "原海报 760×1280（竖版）", value: "760/1280" }
+              - { label: "1:1 方形", value: "1/1" }
+              - { label: "3:4 竖版", value: "3/4" }
+              - { label: "4:5 竖版", value: "4/5" }
+              - { label: "4:3 横版", value: "4/3" }
+              - { label: "16:9 宽屏", value: "16/9" }
+              - { label: "9:16 竖屏", value: "9/16" }
+            hint: "选择海报显示比例，改完即可见"
           - name: posters
             label: "分享海报"
             widget: list
@@ -209,7 +231,4 @@ collections:
         fields:
           - { name: hero, label: "首屏形象照", widget: image }
           - { name: flagship, label: "旗舰案例配图", widget: image }
-          - { name: case1, label: "客户案例图 1", widget: image }
-          - { name: case2, label: "客户案例图 2", widget: image }
-          - { name: case3, label: "客户案例图 3", widget: image }
           - { name: wechat, label: "微信二维码", widget: image }
