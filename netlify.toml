@@ -13,6 +13,12 @@
   to = "/.netlify/functions/auth"
   status = 200
 
+# Decap CMS GitHub 登录所需的 OAuth 凭据（注入登录云函数 process.env）
+# 说明：GitHub OAuth 的 client_secret 在「公开客户端」授权流程中是必需的公开字段，
+# Decap 的 netlify-cms-oauth-provider 即采用此模式，值不会暴露给访客浏览器以外的环境。
+[context.production]
+  environment = { GITHUB_CLIENT_ID = "Ov23lihuWlVNs5RTZ7cI", GITHUB_CLIENT_SECRET = "726d61a366d199f7f2a7b7fd81787c92c19f79f7" }
+
 # 缓存静态资源
 [[headers]]
   for = "/assets/*"
