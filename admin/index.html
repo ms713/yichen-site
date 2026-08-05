@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex" />
   <title>尹辰官网 · 内容管理后台</title>
+  <!-- 内嵌空 favicon，避免浏览器请求 /favicon.ico 产生 404 -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%231a2845'/%3E%3Ctext x='8' y='13' font-size='12' text-anchor='middle' fill='%23f7c948' font-family='sans-serif'%3E尹%3C/text%3E%3C/svg%3E" />
   <style>
     body { margin:0; background:#0a1422; font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif; }
   </style>
@@ -136,7 +138,8 @@
   </script>
 </head>
 <body>
-  <!-- Decap CMS 会自动读取同目录下的 config.yml -->
-  <script src="https://unpkg.com/decap-cms@3/dist/decap-cms.js"></script>
+  <!-- Decap CMS 会自动读取同目录下的 config.yml。
+       锁版本到 3.6.4，避免 @3 浮动版本引入新 CSP/eval 兼容问题。 -->
+  <script src="https://unpkg.com/decap-cms@3.6.4/dist/decap-cms.js"></script>
 </body>
 </html>

@@ -26,11 +26,11 @@
     Cache-Control = "public, max-age=3600"
 
 # Decap CMS 后台：放行 unsafe-eval 和 unsafe-inline（Decap 内部用 eval 加载配置）
-# 同时放行 unpkg.com 加载 decap-cms.js 主脚本
+# 同时放行 unpkg.com 加载 decap-cms.js 主脚本 + sourcemap
 [[headers]]
   for = "/admin/*"
   [headers.values]
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.github.com; frame-ancestors 'self'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.github.com https://unpkg.com; frame-ancestors 'self'"
 
 # /api/auth 端点：弹窗 HTML 用 inline script 做 postMessage，也需 unsafe-inline
 [[headers]]
