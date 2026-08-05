@@ -12,19 +12,28 @@
   </style>
 
   <!--
-    OAuth Recovery Script (must run BEFORE Decap loads)
-    场景：用户点了 Login with GitHub，浏览器（不是弹窗）直接被 GitHub 重定向到了 /admin/#access_token=...。
-    这种情况下 Decap 收不到 postMessage（弹窗协议），但我们手里已经有 token。
-    这个脚本会：
-      1. 把 URL hash 里的 access_token 同步到 localStorage 并清掉 URL
-      2. 监听用户后续点 Login 时触发的 'authorizing:github' 握手，注入 'authorization:github:success:{json}' 给 Decap
-      3. 同时拦截 window.open 处理 popup 被屏蔽的兜底
+    OAuth Recovery Script
+    ============================================================
+    解决问题：弹窗里的 postMessage 在某些浏览器/扩展场景下传不回主窗口。
+    兜底机制（按优先级）：
+      1. 监听 storage 事件：弹窗（与主窗口同源）把 token 写 localStorage 时，
+         主窗口通过 storage 事件拿到，注入 success 消息。
+      2. 监听 message 事件：捕获弹窗（顺利的话）的授权:github:success 消息。
+         这个是 Decap 默认机制，我们额外兜个底捕获一次，确保被处理。
+      3. URL hash 兜底：如果某次 OAuth App callback 配错，GitHub 直接把
+         token 送回主窗口 /admin/#access_token=...，我们存到 localStorage
+         并清掉 URL，下次点 Login 时通过 storage 事件转发。
+
+    注意事项：坚决不拦截 window.open，绝不主动 close 弹窗。
+    任何"自动关弹窗"的逻辑都会破坏正常 OAuth 流程。
+    ============================================================
   -->
   <script>
   (function() {
-    var RECOVERY_KEY = 'decap_oauth_recovery';
+    'use strict';
 
-    // ===== Step 1: 把 URL hash 里的 token 存到 localStorage =====
+    // ===== 路径 1: URL hash 兜底（GitHub 直接跳主窗口场景）=====
+    var RECOVERY_KEY = 'decap_oauth_recovery';
     var hash = window.location.hash;
     if (hash && hash.indexOf('access_token') !== -1) {
       var hashStr = hash.charAt(0) === '#' ? hash.substring(1) : hash;
@@ -38,7 +47,7 @@
             scope: params.get('scope') || 'repo'
           }));
           window.history.replaceState(null, '', window.location.pathname);
-          console.log('[Decap OAuth Recovery] Token 从 URL 临时保存。点击「Login with GitHub」完成登录。');
+          console.log('[Decap OAuth Recovery] 检测到 URL hash 携带 token，已保存到 localStorage。');
         } catch (e) {}
       }
     }
@@ -52,87 +61,62 @@
       try {
         var pd = JSON.parse(localStorage.getItem(RECOVERY_KEY));
         var payload = JSON.stringify({ token: pd.token, provider: pd.provider, scope: pd.scope });
-        // 派发 Decap 期望的 success 消息（string 格式，netlify-auth.js 用 e.data.indexOf('authorization:...') 匹配）
+        // 派发 Decap 期望的 success 消息（string 格式，netlify-auth.js 用 e.data.indexOf('authorization:') 匹配）
         window.dispatchEvent(new MessageEvent('message', {
           data: 'authorization:github:success:' + payload
         }));
-        // 也额外尝试一次 object 格式（如果某版本 Decap 用 e.data.type 判断）
+        // 派发 object 格式（更宽松的匹配方式）
         window.dispatchEvent(new MessageEvent('message', {
           data: { type: 'authorization:github:success', token: pd.token, provider: pd.provider, scope: pd.scope }
         }));
         localStorage.removeItem(RECOVERY_KEY);
-        console.log('[Decap OAuth Recovery] 已注入 token，应当自动进入后台。');
+        console.log('[Decap OAuth Recovery] 注入 token，应当自动进入后台。');
       } catch (e) {
         console.error('[Decap OAuth Recovery] 失败：', e);
       }
     };
 
-    // ===== 额外兜底：监听 localStorage 的 storage 事件 =====
-    // 弹窗（popup）在拿到 token 后会把 token 写入 localStorage。即使浏览器把弹窗的
-    // window.opener 置空（postMessage 传不回主窗口），父窗口也能通过 storage 事件收到通知，
-    // 再派发 success 消息给 Decap 完成登录。
+    // ===== 路径 2: storage 事件兜底（弹窗写 localStorage 后主窗口接管）=====
+    // 弹窗（与主窗口同源 yinchen.netlify.app）写入 decap_oauth_token 时，
+    // 主窗口的 storage 事件会触发，我们把 token 提到 RECOVERY_KEY，再 fireRecovery。
     window.addEventListener('storage', function(e) {
       if (e.key === 'decap_oauth_token' && e.newValue) {
         try {
+          // 弹窗同时也会清理这个 key；保险起见，我们把 token 也存到 RECOVERY_KEY
           var pd = JSON.parse(e.newValue);
-          var payload = JSON.stringify({ token: pd.token, provider: pd.provider, scope: pd.scope });
-          window.dispatchEvent(new MessageEvent('message', {
-            data: 'authorization:github:success:' + payload
-          }));
-          localStorage.removeItem('decap_oauth_token');
-          console.log('[Decap OAuth Recovery] storage 事件触发，已注入 token。');
+          localStorage.setItem(RECOVERY_KEY, JSON.stringify(pd));
+          console.log('[Decap OAuth Recovery] storage 事件触发，已提取 token，等待 Decap 握手以注入。');
+          // 派发一次握手给 Decap 触发其等待 success 的状态机
+          window.dispatchEvent(new MessageEvent('message', { data: 'authorizing:github' }));
+          // 在 Decap 进入等待状态后注入 success
+          setTimeout(fireRecovery, 200);
         } catch (err) {
           console.error('[Decap OAuth Recovery] storage 解析失败', err);
         }
       }
     });
 
-    // ===== Step 2: 拦截 window.open 处理 popup 行为 =====
-    var origOpen = window.open ? window.open.bind(window) : null;
-    if (origOpen) {
-      window.open = function() {
-        var popup = origOpen.apply(window, arguments);
-        if (!popup) {
-          // Popup blocked
-          if (hasRecovery()) {
-            console.warn('[Decap OAuth Recovery] Popup 被屏蔽，用 fallback 注入 token。');
-            setTimeout(function() {
-              window.dispatchEvent(new MessageEvent('message', { data: 'authorizing:github' }));
-              setTimeout(fireRecovery, 200);
-            }, 50);
-          }
-        } else {
-          // Popup opened: 如果我们手里有 token 就直接关掉 popup，用 token 完成登录
-          window.__nc_oauth_popup = popup;
-          if (hasRecovery()) {
-            setTimeout(function() { try { popup.close(); } catch (e) {} }, 100);
-            setTimeout(function() {
-              window.dispatchEvent(new MessageEvent('message', { data: 'authorizing:github' }));
-              setTimeout(fireRecovery, 200);
-            }, 50);
-          }
-        }
-        return popup;
-      };
-    }
-
-    // ===== Step 3: 拦截 message 监听（捕获 Decap 的 handshake） =====
-    var origAdd = window.addEventListener.bind(window);
-    window.addEventListener = function(type) {
-      if (type === 'message') {
-        var args = Array.prototype.slice.call(arguments, 1);
+    // ===== 路径 3: 拦截 message 监听器，捕获握手 =====
+    // 当 Decap 在父窗口收到弹窗发来的 'authorizing:github' 握手时，
+    // 我们也趁机把 RECOVERY_KEY 里的 token 喂给 Decap 完成登录。
+    // 用于 URL hash 路径：用户被 GitHub 直接重定向到 /admin/，URL 上的 token
+    // 已经在页面加载时被存到 RECOVERY_KEY；用户点 Login 后，弹窗会发握手，
+    // 我们趁机注入 token。
+    var origAdd = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function(type) {
+      if (type === 'message' && this === window) {
+        var args = Array.prototype.slice.call(arguments);
         var origHandler = args[0];
         args[0] = function(e) {
           try { origHandler.call(this, e); } catch (err) {}
-          // Decap 收到 'authorizing:github' 之后会立刻把监听换成等 success。
-          // 我们也监听 'authorizing:github'，判断要不要注入 recovery token
           if (e && e.data === 'authorizing:github' && hasRecovery()) {
+            console.log('[Decap OAuth Recovery] 捕获到握手，注入 token。');
             setTimeout(fireRecovery, 200);
           }
         };
-        return origAdd.apply(window, [type].concat(args));
+        return origAdd.apply(this, [type].concat(args));
       }
-      return origAdd.apply(window, arguments);
+      return origAdd.apply(this, arguments);
     };
   })();
   </script>
