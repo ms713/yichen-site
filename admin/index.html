@@ -61,16 +61,15 @@
       try {
         var pd = JSON.parse(localStorage.getItem(RECOVERY_KEY));
         var payload = JSON.stringify({ token: pd.token, provider: pd.provider, scope: pd.scope });
-        // 派发 Decap 期望的 success 消息（string 格式，netlify-auth.js 用 e.data.indexOf('authorization:') 匹配）
-        window.dispatchEvent(new MessageEvent('message', {
-          data: 'authorization:github:success:' + payload
-        }));
-        // 派发 object 格式（更宽松的匹配方式）
-        window.dispatchEvent(new MessageEvent('message', {
-          data: { type: 'authorization:github:success', token: pd.token, provider: pd.provider, scope: pd.scope }
-        }));
+        // 关键修复：用 window.postMessage 给当前 origin。
+        // 浏览器自动把 e.origin 设为该 origin，使 Decap 内部 NetlifyAuthenticator.authorizeCallback
+        // 的 `r.origin === this.base_url`（'https://yinchen.netlify.app'）检查通过。
+        // 之前用 dispatchEvent(new MessageEvent(...)) 时 origin=""，永远被 Decap reject。
+        window.postMessage('authorization:github:success:' + payload, window.location.origin);
+        // 兼容：再发对象格式
+        window.postMessage({ type: 'authorization:github:success', token: pd.token, provider: pd.provider, scope: pd.scope }, window.location.origin);
         localStorage.removeItem(RECOVERY_KEY);
-        console.log('[Decap OAuth Recovery] 注入 token，应当自动进入后台。');
+        console.log('[Decap OAuth Recovery] postMessage 注入 token，应当自动进入后台。');
       } catch (e) {
         console.error('[Decap OAuth Recovery] 失败：', e);
       }
