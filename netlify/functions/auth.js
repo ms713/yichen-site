@@ -24,11 +24,40 @@ exports.handler = async (event) => {
   const qs = event.queryStringParameters || {};
 
   // ============ 弹窗入口（NetlifyAuthenticator 打开 ?provider=github）============
+  // 关键：使用 <meta http-equiv="refresh"> 强制跳转到 GitHub
+  //   - 之前用 window.location.assign() 在某些浏览器/扩展下会失败
+  //   - meta refresh 是 HTML 标准跳转，几乎不可能被阻止
+  //   - head script 同步发 authorizing:github 握手（meta refresh 还没跳走）
+  //   - body script setTimeout 80ms 兜底再 location.replace() 一次
   if (qs.provider === "github") {
+    const scope = qs.scope || "repo";
+    const redirectUri = BASE + "/api/auth";
+    const authURL = "https://github.com/login/oauth/authorize?client_id=" + encodeURIComponent(CLIENT_ID) +
+                    "&redirect_uri=" + encodeURIComponent(redirectUri) +
+                    "&response_type=token&scope=" + encodeURIComponent(scope) +
+                    "&allow_signup=false";
     return {
       statusCode: 200,
       headers: { "Content-Type": "text/html; charset=utf-8" },
-      body: popupHtml()
+      body: `<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <title>登录中...</title>
+  <meta http-equiv="refresh" content="0; url=${authURL}">
+  <style>body{font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f6f8fa;color:#24292f}.box{text-align:center;padding:32px}</style>
+  <script>
+  // 立即同步发握手（meta refresh 0 延迟还没跳走）
+  try { if (window.opener && !window.opener.closed) window.opener.postMessage("authorizing:github", "${BASE}"); } catch (e) { console.error("handshake failed", e); }
+  </script>
+</head>
+<body>
+<div class="box">正在跳转到 GitHub 授权...</div>
+<script>
+setTimeout(function(){ try { window.location.replace("${authURL}"); } catch(e) {} }, 80);
+</script>
+</body>
+</html>`
     };
   }
 
