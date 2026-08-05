@@ -163,16 +163,47 @@
       });
     }
 
-    /* Sharing */
+    /* Sharing - 每张海报独立配置（比例 / 焦点位置 / 占行宽度） */
     setText('sharingHeading', c.sharing.heading);
     var sh = el('shareGrid');
     if (sh && c.sharing.posters) {
-      sh.className = 'share-grid reveal' + (c.sharing.layout === 'list' ? ' share-list' : '');
+      sh.className = 'share-grid reveal';
       sh.innerHTML = '';
-      var ratio = (c.sharing.ratio || '760/1280').replace('/', ' / ');
-      c.sharing.posters.forEach(function (src) {
-        var img = document.createElement('img'); img.className = 'poster'; img.src = src || '';
-        img.alt = '线上分享海报'; img.style.aspectRatio = ratio; sh.appendChild(img);
+      // 兜底：每张图的占行 grid-column span（每行 3 列）
+      var spanMap = { full: 'span 3', half: 'span 2', third: 'span 1' };
+      c.sharing.posters.forEach(function (item) {
+        // 兼容老格式（字符串数组）与新格式（对象数组）
+        var src, ratio, position, width, title;
+        if (typeof item === 'string') {
+          src = item;
+          ratio = '760/1280';
+          position = 'center';
+          width = 'third';
+          title = '';
+        } else {
+          src = item.poster || '';
+          ratio = item.ratio || '760/1280';
+          position = item.position || 'center';
+          width = item.width || 'third';
+          title = item.title || '';
+        }
+        var wrap = document.createElement('figure');
+        wrap.className = 'poster-wrap poster-' + width;
+        wrap.style.gridColumn = spanMap[width] || 'span 1';
+        var img = document.createElement('img');
+        img.className = 'poster';
+        img.src = src;
+        img.alt = title || '线上分享海报';
+        img.style.aspectRatio = ratio.replace('/', ' / ');
+        img.style.objectPosition = position;
+        wrap.appendChild(img);
+        if (title) {
+          var cap = document.createElement('figcaption');
+          cap.className = 'poster-caption';
+          cap.textContent = title;
+          wrap.appendChild(cap);
+        }
+        sh.appendChild(wrap);
       });
     }
 

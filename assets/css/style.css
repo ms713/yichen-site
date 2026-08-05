@@ -198,15 +198,20 @@ section { padding:84px 0; }
 .testi-card .who { color:var(--text-faint); font-size:14px; margin-top:14px; }
 
 /* ---------- Sharing ---------- */
+/* 容器固定 3 列网格；每张海报的"占行宽度"由 grid-column span 决定（1/2/3 列） */
 .share-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:14px; }
-.share-grid.share-list { grid-template-columns:1fr; max-width:520px; margin-left:auto; margin-right:auto; }
+.poster-wrap { margin:0; display:flex; flex-direction:column; }
+.poster-wrap.poster-full { /* 占整行的海报可以稍微缩进展示 */ }
 .poster {
   width:100%; border-radius:var(--radius); border:1px solid var(--gold-line);
   transition:transform .3s var(--ease),box-shadow .3s var(--ease); cursor:pointer;
-  aspect-ratio:760 / 1280; /* 默认原海报比例；JS 会按 content.json 的 ratio 覆盖 */
+  aspect-ratio:760 / 1280; /* 默认原海报比例；JS 会按每张图覆盖 */
   object-fit:cover;
+  object-position:center; /* 默认焦点居中；JS 会按每张图覆盖 */
+  display:block;
 }
 .poster:hover { transform:translateY(-6px); box-shadow:0 22px 50px rgba(0,0,0,.5); }
+.poster-caption { color:var(--text-dim); font-size:14px; margin-top:8px; text-align:center; line-height:1.5; }
 
 /* ---------- Final CTA ---------- */
 .final { background:var(--card-2); text-align:center; }
