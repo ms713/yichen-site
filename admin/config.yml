@@ -1,8 +1,8 @@
 # ============================================================
 # 尹辰官网 · Decap CMS 配置（模块化版）
-# 后台地址：https://<你的 EdgeOne 域名>/admin/
+# 后台地址：https://yichen.urchincxj.workers.dev/admin/
 # 登录方式：GitHub 账号登录（仅你自己能进）
-# 保存即自动写回 GitHub(main) → EdgeOne 自动重新部署上线
+# 保存即自动写回 GitHub(main) → Cloudflare 自动重新部署上线
 # ============================================================
 
 backend:
@@ -10,10 +10,9 @@ backend:
   repo: ms713/yichen-site
   branch: main
   # 纯静态鉴权页（website/api/auth.html）替代 Netlify 云函数
-  # ⚠️ 下面这个 base_url 只是兜底值：admin/index.html 会在运行时自动把它
-  #    覆盖为当前访问域名（location.origin），所以换平台/换域名无需改这里。
-  #    唯一仍需手动同步的是 GitHub OAuth App 的 Authorization callback URL。
-  base_url: https://yichen-site-z4ty5uxg.edgeone.cool
+  # base_url 是兜底：admin/index.html 会在运行时自动用 location.origin 覆盖，
+  # 所以换平台/换域名无需改这里（GitHub OAuth App 的 callback 还是要同步）。
+  base_url: https://yichen.urchincxj.workers.dev
   auth_endpoint: api/auth.html
   app_id: Ov23lihuWlVNs5RTZ7cI
 
@@ -60,13 +59,14 @@ collections:
 
           # ============================================================
           # 页面模块：可自由增 / 删 / 拖拽排序
-          # 每个模块带 type，下方按 type 显示对应字段（condition）
+          # 每个 type 一个独立 object（命名 <type>_cfg），object 内字段互不冲突
+          # 避免 list item fields 重名报错
           # ============================================================
           - name: modules
             label: "页面模块（可自由增删 / 排序）"
             widget: list
             summary: "【{{fields.type}}】"
-            hint: "点「+ 添加」新增板块，拖动排序；不同类型字段不同。图片类都可单独设比例/焦点/宽度。"
+            hint: "点「+ 添加」新增板块，拖动排序；不同类型显示不同的配置表单。"
             fields:
               - name: type
                 label: "模块类型"
@@ -85,223 +85,137 @@ collections:
                   - { label: "纯文字段落", value: "richtext" }
                   - { label: "单图展示", value: "image" }
 
-              # ---------- media ----------
-              - name: title
-                label: "标题"
-                widget: string
-                condition: { field: type, value: media }
-              - name: btns
-                label: "媒体按钮"
-                widget: list
-                condition: { field: type, value: media }
-                summary: "{{fields.label}}"
-                fields:
-                  - { name: label, label: "按钮文字", widget: string }
-                  - { name: href, label: "跳转链接", widget: string }
-                  - { name: alt, label: "次要样式（灰底）", widget: boolean, default: false }
-                  - { name: icon, label: "显示播放图标", widget: boolean, default: false }
-
-              # ---------- about ----------
-              - name: heading
-                label: "小标题 / 引言"
-                widget: string
-                condition: { field: type, value: about }
-              - name: bio
-                label: "个人简介（段落）"
-                widget: list
-                condition: { field: type, value: about }
-                field: { name: para, label: "段落", widget: text }
-              - name: callout
-                label: "高亮金句"
-                widget: string
-                condition: { field: type, value: about }
-              - name: advCards
-                label: "优势卡片"
-                widget: list
-                condition: { field: type, value: about }
-                summary: "{{fields.title}}"
-                fields:
-                  - { name: ic, label: "图标符号", widget: string, hint: "可填 ◎ ◈ ✦ ▲ 等符号" }
-                  - { name: title, label: "标题", widget: string }
-                  - { name: desc, label: "描述", widget: text }
-
-              # ---------- courses ----------
-              - name: heading
-                label: "板块标题"
-                widget: string
-                condition: { field: type, value: courses }
-              - name: sub
-                label: "板块副标题"
-                widget: text
-                condition: { field: type, value: courses }
-              - name: list
-                label: "课程卡片"
-                widget: list
-                condition: { field: type, value: courses }
-                summary: "{{fields.title}}"
-                hint: "可拖拽排序、增删；顺序即页面展示顺序"
-                fields:
-                  - { name: title, label: "课程名", widget: string }
-                  - { name: desc, label: "简介", widget: text }
-              - name: topics
-                label: "热门授课主题"
-                widget: list
-                condition: { field: type, value: courses }
-                field: { name: topic, label: "主题", widget: string }
-              - name: entBanner
-                label: "企业内训横幅"
+              # ========== media_cfg ==========
+              - name: media_cfg
+                label: "媒体按钮条 · 内容"
                 widget: object
+                collapsed: false
+                condition: { field: type, value: media }
+                fields:
+                  - { name: title, label: "标题", widget: string }
+                  - name: btns
+                    label: "媒体按钮"
+                    widget: list
+                    summary: "{{fields.label}}"
+                    fields:
+                      - { name: label, label: "按钮文字", widget: string }
+                      - { name: href, label: "跳转链接", widget: string }
+                      - { name: alt, label: "次要样式（灰底）", widget: boolean, default: false }
+                      - { name: icon, label: "显示播放图标", widget: boolean, default: false }
+
+              # ========== about_cfg ==========
+              - name: about_cfg
+                label: "关于模块 · 内容"
+                widget: object
+                collapsed: false
+                condition: { field: type, value: about }
+                fields:
+                  - { name: heading, label: "小标题 / 引言", widget: string }
+                  - name: bio
+                    label: "个人简介（段落）"
+                    widget: list
+                    field: { name: para, label: "段落", widget: text }
+                  - { name: callout, label: "高亮金句", widget: string }
+                  - name: advCards
+                    label: "优势卡片"
+                    widget: list
+                    summary: "{{fields.title}}"
+                    fields:
+                      - { name: ic, label: "图标符号", widget: string, hint: "可填 ◎ ◈ ✦ ▲ 等符号" }
+                      - { name: title, label: "标题", widget: string }
+                      - { name: desc, label: "描述", widget: text }
+
+              # ========== courses_cfg ==========
+              - name: courses_cfg
+                label: "课程体系 · 内容"
+                widget: object
+                collapsed: false
                 condition: { field: type, value: courses }
                 fields:
-                  - { name: title, label: "标题", widget: string }
-                  - { name: desc, label: "描述", widget: text }
-                  - { name: btn, label: "按钮文字", widget: string }
+                  - { name: heading, label: "板块标题", widget: string }
+                  - { name: sub, label: "板块副标题", widget: text }
+                  - name: list
+                    label: "课程卡片"
+                    widget: list
+                    summary: "{{fields.title}}"
+                    hint: "可拖拽排序、增删；顺序即页面展示顺序"
+                    fields:
+                      - { name: title, label: "课程名", widget: string }
+                      - { name: desc, label: "简介", widget: text }
+                  - name: topics
+                    label: "热门授课主题"
+                    widget: list
+                    field: { name: topic, label: "主题", widget: string }
+                  - name: entBanner
+                    label: "企业内训横幅"
+                    widget: object
+                    fields:
+                      - { name: title, label: "标题", widget: string }
+                      - { name: desc, label: "描述", widget: text }
+                      - { name: btn, label: "按钮文字", widget: string }
 
-              # ---------- system ----------
-              - name: kicker
-                label: "上方小标签"
-                widget: string
+              # ========== system_cfg ==========
+              - name: system_cfg
+                label: "图标卡片墙 · 内容"
+                widget: object
+                collapsed: false
                 condition: { field: type, value: system }
-              - name: heading
-                label: "板块标题"
-                widget: string
-                condition: { field: type, value: system }
-              - name: sub
-                label: "板块副标题"
-                widget: text
-                condition: { field: type, value: system }
-              - name: cards
-                label: "交付卡片"
-                widget: list
-                condition: { field: type, value: system }
-                summary: "{{fields.title}}"
                 fields:
-                  - { name: ic, label: "图标符号", widget: string }
-                  - { name: title, label: "标题", widget: string }
-                  - { name: desc, label: "描述", widget: text }
+                  - { name: kicker, label: "上方小标签", widget: string }
+                  - { name: heading, label: "板块标题", widget: string }
+                  - { name: sub, label: "板块副标题", widget: text }
+                  - name: cards
+                    label: "交付卡片"
+                    widget: list
+                    summary: "{{fields.title}}"
+                    fields:
+                      - { name: ic, label: "图标符号", widget: string }
+                      - { name: title, label: "标题", widget: string }
+                      - { name: desc, label: "描述", widget: text }
 
-              # ---------- certs ----------
-              - name: heading
-                label: "板块标题"
-                widget: string
+              # ========== certs_cfg ==========
+              - name: certs_cfg
+                label: "专业认证墙 · 内容"
+                widget: object
+                collapsed: false
                 condition: { field: type, value: certs }
-              - name: sub
-                label: "板块副标题"
-                widget: text
-                condition: { field: type, value: certs }
-              - name: highlight
-                label: "高亮头衔"
-                widget: string
-                condition: { field: type, value: certs }
-                hint: "例如：★ AIGC 技能导师"
-              - name: list
-                label: "认证列表"
-                widget: list
-                condition: { field: type, value: certs }
-                field: { name: cert, label: "认证名称", widget: string }
-
-              # ---------- flagship ----------
-              - name: kicker
-                label: "上方小标签"
-                widget: string
-                condition: { field: type, value: flagship }
-              - name: heading
-                label: "板块标题"
-                widget: string
-                condition: { field: type, value: flagship }
-              - name: text
-                label: "案例描述"
-                widget: text
-                condition: { field: type, value: flagship }
-              - name: deliver
-                label: "交付物清单"
-                widget: list
-                condition: { field: type, value: flagship }
-                field: { name: item, label: "交付项", widget: string }
-              - name: image
-                label: "案例配图"
-                widget: image
-                condition: { field: type, value: flagship }
-              - name: ratio
-                label: "图片显示比例"
-                widget: select
-                condition: { field: type, value: flagship }
-                default: "809/520"
-                options:
-                  - { label: "横版 809×520", value: "809/520" }
-                  - { label: "原海报 760×1280（竖版）", value: "760/1280" }
-                  - { label: "1:1 方形", value: "1/1" }
-                  - { label: "16:9 宽屏", value: "16/9" }
-                  - { label: "4:3 横版", value: "4/3" }
-                  - { label: "3:4 竖版", value: "3/4" }
-              - name: position
-                label: "焦点位置（裁剪保留区域）"
-                widget: select
-                condition: { field: type, value: flagship }
-                default: "center"
-                options:
-                  - { label: "默认居中", value: "center" }
-                  - { label: "顶部", value: "top" }
-                  - { label: "底部", value: "bottom" }
-                  - { label: "左侧", value: "left" }
-                  - { label: "右侧", value: "right" }
-
-              # ---------- clients ----------
-              - name: heading
-                label: "板块标题"
-                widget: string
-                condition: { field: type, value: clients }
-              - name: sub
-                label: "板块副标题"
-                widget: text
-                condition: { field: type, value: clients }
-              - name: tags
-                label: "客户类型标签"
-                widget: list
-                condition: { field: type, value: clients }
-                field: { name: tag, label: "标签", widget: string }
-              - name: testi
-                label: "客户评价"
-                widget: list
-                condition: { field: type, value: clients }
-                summary: "{{fields.who}}"
                 fields:
-                  - { name: text, label: "评价内容", widget: text }
-                  - { name: who, label: "评价人", widget: string }
+                  - { name: heading, label: "板块标题", widget: string }
+                  - { name: sub, label: "板块副标题", widget: text }
+                  - { name: highlight, label: "高亮头衔", widget: string, hint: "例如：★ AIGC 技能导师" }
+                  - name: list
+                    label: "认证列表"
+                    widget: list
+                    field: { name: cert, label: "认证名称", widget: string }
 
-              # ---------- gallery ----------
-              - name: kicker
-                label: "上方小标签"
-                widget: string
-                condition: { field: type, value: gallery }
-              - name: heading
-                label: "板块标题"
-                widget: string
-                condition: { field: type, value: gallery }
-              - name: posters
-                label: "分享海报"
-                widget: list
-                condition: { field: type, value: gallery }
-                hint: "每张海报可独立设置：图片、显示比例、焦点位置、占行宽度；可拖拽排序、增删"
-                summary: "{{fields.title}} · {{fields.ratio}} · {{fields.width}}"
+              # ========== flagship_cfg ==========
+              - name: flagship_cfg
+                label: "案例展示 · 内容"
+                widget: object
+                collapsed: false
+                condition: { field: type, value: flagship }
                 fields:
-                  - { name: title, label: "图说（可选，悬停显示）", widget: string, required: false }
-                  - { name: poster, label: "海报图片", widget: image }
+                  - { name: kicker, label: "上方小标签", widget: string }
+                  - { name: heading, label: "板块标题", widget: string }
+                  - { name: text, label: "案例描述", widget: text }
+                  - name: deliver
+                    label: "交付物清单"
+                    widget: list
+                    field: { name: item, label: "交付项", widget: string }
+                  - { name: image, label: "案例配图", widget: image }
                   - name: ratio
-                    label: "显示比例"
+                    label: "图片显示比例"
                     widget: select
-                    default: "760/1280"
+                    default: "809/520"
                     options:
+                      - { label: "横版 809×520", value: "809/520" }
                       - { label: "原海报 760×1280（竖版）", value: "760/1280" }
                       - { label: "1:1 方形", value: "1/1" }
-                      - { label: "3:4 竖版", value: "3/4" }
-                      - { label: "4:5 竖版", value: "4/5" }
-                      - { label: "4:3 横版", value: "4/3" }
                       - { label: "16:9 宽屏", value: "16/9" }
-                      - { label: "9:16 竖屏", value: "9/16" }
-                    hint: "图片会按此比例裁剪显示（默认 760/1280）"
+                      - { label: "4:3 横版", value: "4/3" }
+                      - { label: "3:4 竖版", value: "3/4" }
                   - name: position
-                    label: "焦点位置（裁剪时保留哪部分）"
+                    label: "焦点位置（裁剪保留区域）"
                     widget: select
                     default: "center"
                     options:
@@ -310,91 +224,146 @@ collections:
                       - { label: "底部", value: "bottom" }
                       - { label: "左侧", value: "left" }
                       - { label: "右侧", value: "right" }
-                      - { label: "左上", value: "top left" }
-                      - { label: "右上", value: "top right" }
-                      - { label: "左下", value: "bottom left" }
-                      - { label: "右下", value: "bottom right" }
-                    hint: "图片被比例裁剪时，保留哪个区域"
+
+              # ========== clients_cfg ==========
+              - name: clients_cfg
+                label: "客户评价 · 内容"
+                widget: object
+                collapsed: false
+                condition: { field: type, value: clients }
+                fields:
+                  - { name: heading, label: "板块标题", widget: string }
+                  - { name: sub, label: "板块副标题", widget: text }
+                  - name: tags
+                    label: "客户类型标签"
+                    widget: list
+                    field: { name: tag, label: "标签", widget: string }
+                  - name: testi
+                    label: "客户评价"
+                    widget: list
+                    summary: "{{fields.who}}"
+                    fields:
+                      - { name: text, label: "评价内容", widget: text }
+                      - { name: who, label: "评价人", widget: string }
+
+              # ========== gallery_cfg ==========
+              - name: gallery_cfg
+                label: "图片墙 · 内容"
+                widget: object
+                collapsed: false
+                condition: { field: type, value: gallery }
+                fields:
+                  - { name: kicker, label: "上方小标签", widget: string }
+                  - { name: heading, label: "板块标题", widget: string }
+                  - name: posters
+                    label: "分享海报"
+                    widget: list
+                    hint: "每张海报可独立设置：图片、显示比例、焦点位置、占行宽度；可拖拽排序、增删"
+                    summary: "{{fields.title}} · {{fields.ratio}} · {{fields.width}}"
+                    fields:
+                      - { name: title, label: "图说（可选，悬停显示）", widget: string, required: false }
+                      - { name: poster, label: "海报图片", widget: image }
+                      - name: ratio
+                        label: "显示比例"
+                        widget: select
+                        default: "760/1280"
+                        options:
+                          - { label: "原海报 760×1280（竖版）", value: "760/1280" }
+                          - { label: "1:1 方形", value: "1/1" }
+                          - { label: "3:4 竖版", value: "3/4" }
+                          - { label: "4:5 竖版", value: "4/5" }
+                          - { label: "4:3 横版", value: "4/3" }
+                          - { label: "16:9 宽屏", value: "16/9" }
+                          - { label: "9:16 竖屏", value: "9/16" }
+                        hint: "图片会按此比例裁剪显示（默认 760/1280）"
+                      - name: position
+                        label: "焦点位置（裁剪时保留哪部分）"
+                        widget: select
+                        default: "center"
+                        options:
+                          - { label: "默认居中", value: "center" }
+                          - { label: "顶部", value: "top" }
+                          - { label: "底部", value: "bottom" }
+                          - { label: "左侧", value: "left" }
+                          - { label: "右侧", value: "right" }
+                          - { label: "左上", value: "top left" }
+                          - { label: "右上", value: "top right" }
+                          - { label: "左下", value: "bottom left" }
+                          - { label: "右下", value: "bottom right" }
+                        hint: "图片被比例裁剪时，保留哪个区域"
+                      - name: width
+                        label: "占行宽度"
+                        widget: select
+                        default: "third"
+                        options:
+                          - { label: "占整行（满屏单图）", value: "full" }
+                          - { label: "占半行（双列）", value: "half" }
+                          - { label: "占 1/3 行（三列）", value: "third" }
+                        hint: "决定每张图占几列；混合使用可做出杂志感拼贴"
+
+              # ========== cta_cfg ==========
+              - name: cta_cfg
+                label: "CTA · 内容"
+                widget: object
+                collapsed: false
+                condition: { field: type, value: cta }
+                fields:
+                  - { name: heading, label: "标题", widget: string }
+                  - { name: sub, label: "副标题", widget: text }
+
+              # ========== richtext_cfg ==========
+              - name: richtext_cfg
+                label: "纯文字段落 · 内容"
+                widget: object
+                collapsed: false
+                condition: { field: type, value: richtext }
+                fields:
+                  - { name: heading, label: "小标题 / 引言", widget: string }
+                  - name: bio
+                    label: "正文段落"
+                    widget: list
+                    field: { name: para, label: "段落", widget: text }
+                  - { name: callout, label: "高亮金句（可选）", widget: string }
+
+              # ========== image_cfg ==========
+              - name: image_cfg
+                label: "单图 · 内容"
+                widget: object
+                collapsed: false
+                condition: { field: type, value: image }
+                fields:
+                  - { name: image, label: "图片", widget: image }
+                  - { name: caption, label: "图说（可选）", widget: string }
+                  - { name: link, label: "点击跳转链接（可选）", widget: string }
+                  - name: ratio
+                    label: "显示比例"
+                    widget: select
+                    default: "16/9"
+                    options:
+                      - { label: "16:9 宽屏", value: "16/9" }
+                      - { label: "4:3 横版", value: "4/3" }
+                      - { label: "1:1 方形", value: "1/1" }
+                      - { label: "3:4 竖版", value: "3/4" }
+                      - { label: "9:16 竖屏", value: "9/16" }
+                      - { label: "原海报 760×1280（竖版）", value: "760/1280" }
+                  - name: position
+                    label: "焦点位置"
+                    widget: select
+                    default: "center"
+                    options:
+                      - { label: "默认居中", value: "center" }
+                      - { label: "顶部", value: "top" }
+                      - { label: "底部", value: "bottom" }
+                      - { label: "左侧", value: "left" }
+                      - { label: "右侧", value: "right" }
                   - name: width
                     label: "占行宽度"
                     widget: select
-                    default: "third"
+                    default: "full"
                     options:
-                      - { label: "占整行（满屏单图）", value: "full" }
-                      - { label: "占半行（双列）", value: "half" }
-                      - { label: "占 1/3 行（三列）", value: "third" }
-                    hint: "决定每张图占几列；混合使用可做出杂志感拼贴"
-
-              # ---------- cta ----------
-              - name: heading
-                label: "标题"
-                widget: string
-                condition: { field: type, value: cta }
-              - name: sub
-                label: "副标题"
-                widget: text
-                condition: { field: type, value: cta }
-
-              # ---------- richtext ----------
-              - name: heading
-                label: "小标题 / 引言"
-                widget: string
-                condition: { field: type, value: richtext }
-              - name: bio
-                label: "正文段落"
-                widget: list
-                condition: { field: type, value: richtext }
-                field: { name: para, label: "段落", widget: text }
-              - name: callout
-                label: "高亮金句（可选）"
-                widget: string
-                condition: { field: type, value: richtext }
-
-              # ---------- image ----------
-              - name: image
-                label: "图片"
-                widget: image
-                condition: { field: type, value: image }
-              - name: caption
-                label: "图说（可选）"
-                widget: string
-                condition: { field: type, value: image }
-              - name: link
-                label: "点击跳转链接（可选）"
-                widget: string
-                condition: { field: type, value: image }
-              - name: ratio
-                label: "显示比例"
-                widget: select
-                condition: { field: type, value: image }
-                default: "16/9"
-                options:
-                  - { label: "16:9 宽屏", value: "16/9" }
-                  - { label: "4:3 横版", value: "4/3" }
-                  - { label: "1:1 方形", value: "1/1" }
-                  - { label: "3:4 竖版", value: "3/4" }
-                  - { label: "9:16 竖屏", value: "9/16" }
-                  - { label: "原海报 760×1280（竖版）", value: "760/1280" }
-              - name: position
-                label: "焦点位置"
-                widget: select
-                condition: { field: type, value: image }
-                default: "center"
-                options:
-                  - { label: "默认居中", value: "center" }
-                  - { label: "顶部", value: "top" }
-                  - { label: "底部", value: "bottom" }
-                  - { label: "左侧", value: "left" }
-                  - { label: "右侧", value: "right" }
-              - name: width
-                label: "占行宽度"
-                widget: select
-                condition: { field: type, value: image }
-                default: "full"
-                options:
-                  - { label: "占整行", value: "full" }
-                  - { label: "占半行", value: "half" }
-                  - { label: "占 1/3 行", value: "third" }
+                      - { label: "占整行", value: "full" }
+                      - { label: "占半行", value: "half" }
+                      - { label: "占 1/3 行", value: "third" }
 
           # ---------- 页脚（固定） ----------
           - name: footer

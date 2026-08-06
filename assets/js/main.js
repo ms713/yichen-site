@@ -1,6 +1,7 @@
 /* 尹辰官网 — 交互脚本（模块化版）
    功能：从 content.json 渲染内容（hero + modules 数组 + footer）+ 平滑滚动/移动菜单/入场动画/微信复制/留资弹窗/海报灯箱
-   管理后台：访问 /admin/ 编辑内容；带 ?preview=1 时优先读取 localStorage 预览 */
+   管理后台：访问 /admin/ 编辑内容；带 ?preview=1 时优先读取 localStorage 预览
+   注：模块字段统一封装为 m.<type>_cfg，便于后台配置；不修改时按 type 读取对应 cfg */
 (function () {
   'use strict';
 
@@ -55,13 +56,14 @@
   var usedAnchor = {};
 
   function modMedia(m) {
+    var c = m.media_cfg || {};
     var s = el('section', 'media');
     var w = el('div', 'wrap media-row');
     var left = el('div', 'media-left');
     left.appendChild(el('div', 'kicker', 'MEDIA & TALKS'));
-    left.appendChild(el('div', 't', m.title || ''));
+    left.appendChild(el('div', 't', c.title || ''));
     var btns = el('div', 'media-btns');
-    (m.btns || []).forEach(function (b) {
+    (c.btns || []).forEach(function (b) {
       var a = el('a', 'media-btn' + (b.alt ? ' alt' : ''));
       a.href = b.href || '#'; a.target = '_blank'; a.rel = 'noopener';
       if (b.icon) a.appendChild(el('span', 'play-ic'));
@@ -73,23 +75,24 @@
   }
 
   function modAbout(m) {
+    var c = m.about_cfg || {};
     var s = el('section', 'about');
     var w = el('div', 'wrap');
     var head = el('div', 'about-head reveal');
     head.appendChild(el('div', 'kicker', 'ABOUT'));
-    head.appendChild(el('h2', 'h-sec', m.heading || ''));
+    head.appendChild(el('h2', 'h-sec', c.heading || ''));
     w.appendChild(head);
     var bio = el('div', 'about-bio');
-    (m.bio || []).forEach(function (t) { bio.appendChild(el('p', 'about-bio reveal', t)); });
+    (c.bio || []).forEach(function (t) { bio.appendChild(el('p', 'about-bio reveal', t)); });
     w.appendChild(bio);
-    if (m.callout) w.appendChild(el('div', 'callout reveal', m.callout));
-    if (m.advCards) {
+    if (c.callout) w.appendChild(el('div', 'callout reveal', c.callout));
+    if (c.advCards) {
       var g = el('div', 'adv-grid');
-      m.advCards.forEach(function (c) {
+      c.advCards.forEach(function (card) {
         var d = el('div', 'adv-card reveal');
-        d.appendChild(el('div', 'adv-ic', c.ic || ''));
-        d.appendChild(el('h3', null, c.title || ''));
-        d.appendChild(el('p', null, c.desc || ''));
+        d.appendChild(el('div', 'adv-ic', card.ic || ''));
+        d.appendChild(el('h3', null, card.title || ''));
+        d.appendChild(el('p', null, card.desc || ''));
         g.appendChild(d);
       });
       w.appendChild(g);
@@ -99,14 +102,15 @@
   }
 
   function modCourses(m) {
+    var c = m.courses_cfg || {};
     var s = el('section', 'courses');
     var w = el('div', 'wrap');
     var top = el('div', 'reveal');
-    top.appendChild(el('h2', 'h-sec', m.heading || ''));
-    top.appendChild(el('p', 'sub', m.sub || ''));
+    top.appendChild(el('h2', 'h-sec', c.heading || ''));
+    top.appendChild(el('p', 'sub', c.sub || ''));
     w.appendChild(top);
     var g = el('div', 'course-grid');
-    (m.list || []).forEach(function (it) {
+    (c.list || []).forEach(function (it) {
       var a = el('a', 'course-card reveal');
       a.href = '#contact';
       a.appendChild(el('h3', null, it.title || ''));
@@ -114,20 +118,20 @@
       g.appendChild(a);
     });
     w.appendChild(g);
-    if (m.topics) {
+    if (c.topics) {
       var tp = el('div', 'topics reveal');
       tp.appendChild(el('div', 'kicker', '近期热门授课主题'));
       var tt = el('div', 'topic-tags');
-      m.topics.forEach(function (t) { tt.appendChild(el('span', 'tag', t)); });
+      c.topics.forEach(function (t) { tt.appendChild(el('span', 'tag', t)); });
       tp.appendChild(tt); w.appendChild(tp);
     }
-    if (m.entBanner) {
+    if (c.entBanner) {
       var eb = el('div', 'ent-banner reveal');
       var d = el('div');
-      d.appendChild(el('h3', null, m.entBanner.title || ''));
-      d.appendChild(el('p', null, m.entBanner.desc || ''));
+      d.appendChild(el('h3', null, c.entBanner.title || ''));
+      d.appendChild(el('p', null, c.entBanner.desc || ''));
       eb.appendChild(d);
-      var b = el('a', 'btn', m.entBanner.btn || '');
+      var b = el('a', 'btn', c.entBanner.btn || '');
       b.href = '#contact'; b.setAttribute('data-open-modal', '');
       eb.appendChild(b);
       w.appendChild(eb);
@@ -137,19 +141,20 @@
   }
 
   function modSystem(m) {
+    var c = m.system_cfg || {};
     var s = el('section', 'system');
     var w = el('div', 'wrap');
     var top = el('div', 'reveal');
-    top.appendChild(el('div', 'kicker', m.kicker || 'SYSTEM DELIVERY'));
-    top.appendChild(el('h2', 'h-sec', m.heading || ''));
-    top.appendChild(el('p', 'sub', m.sub || ''));
+    top.appendChild(el('div', 'kicker', c.kicker || 'SYSTEM DELIVERY'));
+    top.appendChild(el('h2', 'h-sec', c.heading || ''));
+    top.appendChild(el('p', 'sub', c.sub || ''));
     w.appendChild(top);
     var g = el('div', 'sys-grid');
-    (m.cards || []).forEach(function (c) {
+    (c.cards || []).forEach(function (card) {
       var d = el('div', 'sys-card reveal');
-      d.appendChild(el('div', 'adv-ic', c.ic || ''));
-      d.appendChild(el('h3', null, c.title || ''));
-      d.appendChild(el('p', null, c.desc || ''));
+      d.appendChild(el('div', 'adv-ic', card.ic || ''));
+      d.appendChild(el('h3', null, card.title || ''));
+      d.appendChild(el('p', null, card.desc || ''));
       g.appendChild(d);
     });
     w.appendChild(g);
@@ -158,15 +163,16 @@
   }
 
   function modCerts(m) {
+    var c = m.certs_cfg || {};
     var s = el('section', 'certs');
     var w = el('div', 'wrap');
     var top = el('div', 'reveal');
-    top.appendChild(el('h2', 'h-sec', m.heading || ''));
-    top.appendChild(el('p', 'sub', m.sub || ''));
+    top.appendChild(el('h2', 'h-sec', c.heading || ''));
+    top.appendChild(el('p', 'sub', c.sub || ''));
     w.appendChild(top);
-    if (m.highlight) w.appendChild(el('div', 'cert-hl reveal', m.highlight));
+    if (c.highlight) w.appendChild(el('div', 'cert-hl reveal', c.highlight));
     var g = el('div', 'cert-grid reveal');
-    (m.list || []).forEach(function (t) {
+    (c.list || []).forEach(function (t) {
       var sp = el('span', 'cert-chip');
       sp.appendChild(el('span', 'dot'));
       sp.appendChild(document.createTextNode(t));
@@ -178,17 +184,18 @@
   }
 
   function modFlagship(m) {
+    var c = m.flagship_cfg || {};
     var s = el('section', 'flagship');
     var w = el('div', 'wrap');
     var top = el('div', 'reveal');
-    top.appendChild(el('div', 'kicker', m.kicker || 'FLAGSHIP CASE'));
-    top.appendChild(el('h2', 'h-sec', m.heading || ''));
+    top.appendChild(el('div', 'kicker', c.kicker || 'FLAGSHIP CASE'));
+    top.appendChild(el('h2', 'h-sec', c.heading || ''));
     w.appendChild(top);
     var fg = el('div', 'flag-grid');
     var left = el('div', 'reveal');
-    left.appendChild(el('p', 'flag-text', m.text || ''));
+    left.appendChild(el('p', 'flag-text', c.text || ''));
     var dl = el('ul', 'deliver');
-    (m.deliver || []).forEach(function (t) {
+    (c.deliver || []).forEach(function (t) {
       var li = el('li');
       li.appendChild(el('span', 'ck', '✓'));
       li.appendChild(document.createTextNode(t));
@@ -196,10 +203,10 @@
     });
     left.appendChild(dl);
     fg.appendChild(left);
-    if (m.image) {
+    if (c.image) {
       var img = el('img', 'flag-photo reveal');
-      img.src = m.image;
-      applyImg(img, m.ratio || '809/520', m.position || 'center');
+      img.src = c.image;
+      applyImg(img, c.ratio || '809/520', c.position || 'center');
       fg.appendChild(img);
     }
     w.appendChild(fg);
@@ -208,19 +215,20 @@
   }
 
   function modClients(m) {
+    var c = m.clients_cfg || {};
     var s = el('section', 'clients');
     var w = el('div', 'wrap');
     var top = el('div', 'reveal');
-    top.appendChild(el('h2', 'h-sec', m.heading || ''));
-    top.appendChild(el('p', 'sub', m.sub || ''));
+    top.appendChild(el('h2', 'h-sec', c.heading || ''));
+    top.appendChild(el('p', 'sub', c.sub || ''));
     w.appendChild(top);
-    if (m.tags) {
+    if (c.tags) {
       var ct = el('div', 'client-tags reveal');
-      m.tags.forEach(function (t) { ct.appendChild(el('span', 'client-tag', t)); });
+      c.tags.forEach(function (t) { ct.appendChild(el('span', 'client-tag', t)); });
       w.appendChild(ct);
     }
     var tg = el('div', 'testi');
-    (m.testi || []).forEach(function (t) {
+    (c.testi || []).forEach(function (t) {
       var d = el('div', 'testi-card reveal');
       d.appendChild(el('p', null, t.text || ''));
       d.appendChild(el('div', 'who', t.who || ''));
@@ -232,56 +240,60 @@
   }
 
   function modGallery(m) {
+    var c = m.gallery_cfg || {};
     var s = el('section', 'sharing');
     var w = el('div', 'wrap');
     var top = el('div', 'reveal');
-    top.appendChild(el('div', 'kicker', m.kicker || 'SHARING & TALKS'));
-    top.appendChild(el('h2', 'h-sec', m.heading || ''));
+    top.appendChild(el('div', 'kicker', c.kicker || 'SHARING & TALKS'));
+    top.appendChild(el('h2', 'h-sec', c.heading || ''));
     w.appendChild(top);
     var g = el('div', 'share-grid reveal');
-    renderGallery(g, m.posters);
+    renderGallery(g, c.posters);
     w.appendChild(g);
     s.appendChild(w);
     return s;
   }
 
   function modCta(m) {
+    var c = m.cta_cfg || {};
     var s = el('section', 'final');
     var w = el('div', 'wrap reveal');
-    w.appendChild(el('h2', null, m.heading || ''));
-    w.appendChild(el('p', null, m.sub || ''));
+    w.appendChild(el('h2', null, c.heading || ''));
+    w.appendChild(el('p', null, c.sub || ''));
     s.appendChild(w);
     return s;
   }
 
   function modRichtext(m) {
+    var c = m.richtext_cfg || {};
     var s = el('section', 'about');
     var w = el('div', 'wrap');
     var head = el('div', 'about-head reveal');
     head.appendChild(el('div', 'kicker', 'NOTE'));
-    head.appendChild(el('h2', 'h-sec', m.heading || ''));
+    head.appendChild(el('h2', 'h-sec', c.heading || ''));
     w.appendChild(head);
     var bio = el('div', 'about-bio');
-    (m.bio || []).forEach(function (t) { bio.appendChild(el('p', 'about-bio reveal', t)); });
+    (c.bio || []).forEach(function (t) { bio.appendChild(el('p', 'about-bio reveal', t)); });
     w.appendChild(bio);
-    if (m.callout) w.appendChild(el('div', 'callout reveal', m.callout));
+    if (c.callout) w.appendChild(el('div', 'callout reveal', c.callout));
     s.appendChild(w);
     return s;
   }
 
   function modImage(m) {
+    var c = m.image_cfg || {};
     var s = el('section', 'about mod-image');
     var w = el('div', 'wrap');
     var fig = el('div', 'fig');
     var img = el('img', 'flag-photo');
-    img.src = m.image || '';
-    img.alt = m.caption || '图片';
-    applyImg(img, m.ratio || '16/9', m.position || 'center');
+    img.src = c.image || '';
+    img.alt = c.caption || '图片';
+    applyImg(img, c.ratio || '16/9', c.position || 'center');
     fig.appendChild(img);
-    if (m.caption) fig.appendChild(el('p', 'poster-caption', m.caption));
-    if (m.link) {
+    if (c.caption) fig.appendChild(el('p', 'poster-caption', c.caption));
+    if (c.link) {
       var a = el('a');
-      a.href = m.link; a.target = '_blank'; a.rel = 'noopener';
+      a.href = c.link; a.target = '_blank'; a.rel = 'noopener';
       a.appendChild(fig); w.appendChild(a);
     } else {
       w.appendChild(fig);
