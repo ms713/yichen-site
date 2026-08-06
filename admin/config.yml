@@ -41,23 +41,23 @@ collections:
         file: "content.json"
         description: "编辑网站所有文字、课程、认证与图片，保存即发布"
         fields:
-          - { name: siteTitle, label: "网站标题（浏览器标签）", widget: string, hint: "显示在浏览器标签页上的文字" }
+          - { name: siteTitle, label: "网站标题（浏览器标签）", widget: string, required: false, hint: "显示在浏览器标签页上的文字" }
 
           # ---------- 首屏 Hero（固定） ----------
           - name: hero
             label: "首屏 Hero"
             widget: object
             fields:
-              - { name: kicker, label: "上方小标签", widget: string }
-              - { name: title, label: "主标题", widget: string }
-              - { name: sub, label: "副标题 / 简介", widget: text }
+              - { name: kicker, label: "上方小标签", widget: string, required: false }
+              - { name: title, label: "主标题", widget: string, required: false }
+              - { name: sub, label: "副标题 / 简介", widget: text, required: false }
               - name: stats
                 label: "数据指标（3 个）"
                 widget: list
                 summary: "{{fields.num}} {{fields.label}}"
                 fields:
-                  - { name: num, label: "数字", widget: string }
-                  - { name: label, label: "说明", widget: string }
+                  - { name: num, label: "数字", widget: string, required: false }
+                  - { name: label, label: "说明", widget: string, required: false }
 
           # ---------- 核心图片（固定） ----------
           - name: images
@@ -99,17 +99,17 @@ collections:
               - name: media_cfg
                 label: "媒体按钮条 · 内容"
                 widget: object
-                collapsed: false
+                collapsed: true
                 condition: { field: type, value: media }
                 fields:
-                  - { name: title, label: "标题", widget: string }
+                  - { name: title, label: "标题", widget: string, required: false }
                   - name: btns
                     label: "媒体按钮"
                     widget: list
                     summary: "{{fields.label}}"
                     fields:
-                      - { name: label, label: "按钮文字", widget: string }
-                      - { name: href, label: "跳转链接", widget: string }
+                      - { name: label, label: "按钮文字", widget: string, required: false }
+                      - { name: href, label: "跳转链接", widget: string, required: false }
                       - { name: alt, label: "次要样式（灰底）", widget: boolean, default: false }
                       - { name: icon, label: "显示播放图标", widget: boolean, default: false }
 
@@ -117,101 +117,101 @@ collections:
               - name: about_cfg
                 label: "关于模块 · 内容"
                 widget: object
-                collapsed: false
+                collapsed: true
                 condition: { field: type, value: about }
                 fields:
-                  - { name: heading, label: "小标题 / 引言", widget: string }
+                  - { name: heading, label: "小标题 / 引言", widget: string, required: false }
                   - name: bio
                     label: "个人简介（段落）"
                     widget: list
-                    field: { name: para, label: "段落", widget: text }
-                  - { name: callout, label: "高亮金句", widget: string }
+                    field: { name: para, label: "段落", widget: text, required: false }
+                  - { name: callout, label: "高亮金句", widget: string, required: false }
                   - name: advCards
                     label: "优势卡片"
                     widget: list
                     summary: "{{fields.title}}"
                     fields:
-                      - { name: ic, label: "图标符号", widget: string, hint: "可填 ◎ ◈ ✦ ▲ 等符号" }
-                      - { name: title, label: "标题", widget: string }
-                      - { name: desc, label: "描述", widget: text }
+                      - { name: ic, label: "图标符号", widget: string, required: false, hint: "可填 ◎ ◈ ✦ ▲ 等符号" }
+                      - { name: title, label: "标题", widget: string, required: false }
+                      - { name: desc, label: "描述", widget: text, required: false }
 
               # ========== courses_cfg ==========
               - name: courses_cfg
                 label: "课程体系 · 内容"
                 widget: object
-                collapsed: false
+                collapsed: true
                 condition: { field: type, value: courses }
                 fields:
-                  - { name: heading, label: "板块标题", widget: string }
-                  - { name: sub, label: "板块副标题", widget: text }
+                  - { name: heading, label: "板块标题", widget: string, required: false }
+                  - { name: sub, label: "板块副标题", widget: text, required: false }
                   - name: list
                     label: "课程卡片"
                     widget: list
                     summary: "{{fields.title}}"
                     hint: "可拖拽排序、增删；顺序即页面展示顺序"
                     fields:
-                      - { name: title, label: "课程名", widget: string }
-                      - { name: desc, label: "简介", widget: text }
+                      - { name: title, label: "课程名", widget: string, required: false }
+                      - { name: desc, label: "简介", widget: text, required: false }
                   - name: topics
                     label: "热门授课主题"
                     widget: list
-                    field: { name: topic, label: "主题", widget: string }
+                    field: { name: topic, label: "主题", widget: string, required: false }
                   - name: entBanner
                     label: "企业内训横幅"
                     widget: object
                     fields:
-                      - { name: title, label: "标题", widget: string }
-                      - { name: desc, label: "描述", widget: text }
-                      - { name: btn, label: "按钮文字", widget: string }
+                      - { name: title, label: "标题", widget: string, required: false }
+                      - { name: desc, label: "描述", widget: text, required: false }
+                      - { name: btn, label: "按钮文字", widget: string, required: false }
 
               # ========== system_cfg ==========
               - name: system_cfg
                 label: "图标卡片墙 · 内容"
                 widget: object
-                collapsed: false
+                collapsed: true
                 condition: { field: type, value: system }
                 fields:
-                  - { name: kicker, label: "上方小标签", widget: string }
-                  - { name: heading, label: "板块标题", widget: string }
-                  - { name: sub, label: "板块副标题", widget: text }
+                  - { name: kicker, label: "上方小标签", widget: string, required: false }
+                  - { name: heading, label: "板块标题", widget: string, required: false }
+                  - { name: sub, label: "板块副标题", widget: text, required: false }
                   - name: cards
                     label: "交付卡片"
                     widget: list
                     summary: "{{fields.title}}"
                     fields:
-                      - { name: ic, label: "图标符号", widget: string }
-                      - { name: title, label: "标题", widget: string }
-                      - { name: desc, label: "描述", widget: text }
+                      - { name: ic, label: "图标符号", widget: string, required: false }
+                      - { name: title, label: "标题", widget: string, required: false }
+                      - { name: desc, label: "描述", widget: text, required: false }
 
               # ========== certs_cfg ==========
               - name: certs_cfg
                 label: "专业认证墙 · 内容"
                 widget: object
-                collapsed: false
+                collapsed: true
                 condition: { field: type, value: certs }
                 fields:
-                  - { name: heading, label: "板块标题", widget: string }
-                  - { name: sub, label: "板块副标题", widget: text }
-                  - { name: highlight, label: "高亮头衔", widget: string, hint: "例如：★ AIGC 技能导师" }
+                  - { name: heading, label: "板块标题", widget: string, required: false }
+                  - { name: sub, label: "板块副标题", widget: text, required: false }
+                  - { name: highlight, label: "高亮头衔", widget: string, required: false, hint: "例如：★ AIGC 技能导师" }
                   - name: list
                     label: "认证列表"
                     widget: list
-                    field: { name: cert, label: "认证名称", widget: string }
+                    field: { name: cert, label: "认证名称", widget: string, required: false }
 
               # ========== flagship_cfg ==========
               - name: flagship_cfg
                 label: "案例展示 · 内容"
                 widget: object
-                collapsed: false
+                collapsed: true
                 condition: { field: type, value: flagship }
                 fields:
-                  - { name: kicker, label: "上方小标签", widget: string }
-                  - { name: heading, label: "板块标题", widget: string }
-                  - { name: text, label: "案例描述", widget: text }
+                  - { name: kicker, label: "上方小标签", widget: string, required: false }
+                  - { name: heading, label: "板块标题", widget: string, required: false }
+                  - { name: text, label: "案例描述", widget: text, required: false }
                   - name: deliver
                     label: "交付物清单"
                     widget: list
-                    field: { name: item, label: "交付项", widget: string }
+                    field: { name: item, label: "交付项", widget: string, required: false }
                   - { name: image, label: "案例配图", widget: image }
                   - name: ratio
                     label: "图片显示比例"
@@ -239,32 +239,32 @@ collections:
               - name: clients_cfg
                 label: "客户评价 · 内容"
                 widget: object
-                collapsed: false
+                collapsed: true
                 condition: { field: type, value: clients }
                 fields:
-                  - { name: heading, label: "板块标题", widget: string }
-                  - { name: sub, label: "板块副标题", widget: text }
+                  - { name: heading, label: "板块标题", widget: string, required: false }
+                  - { name: sub, label: "板块副标题", widget: text, required: false }
                   - name: tags
                     label: "客户类型标签"
                     widget: list
-                    field: { name: tag, label: "标签", widget: string }
+                    field: { name: tag, label: "标签", widget: string, required: false }
                   - name: testi
                     label: "客户评价"
                     widget: list
                     summary: "{{fields.who}}"
                     fields:
-                      - { name: text, label: "评价内容", widget: text }
-                      - { name: who, label: "评价人", widget: string }
+                      - { name: text, label: "评价内容", widget: text, required: false }
+                      - { name: who, label: "评价人", widget: string, required: false }
 
               # ========== gallery_cfg ==========
               - name: gallery_cfg
                 label: "图片墙 · 内容"
                 widget: object
-                collapsed: false
+                collapsed: true
                 condition: { field: type, value: gallery }
                 fields:
-                  - { name: kicker, label: "上方小标签", widget: string }
-                  - { name: heading, label: "板块标题", widget: string }
+                  - { name: kicker, label: "上方小标签", widget: string, required: false }
+                  - { name: heading, label: "板块标题", widget: string, required: false }
                   - name: posters
                     label: "分享海报"
                     widget: list
@@ -315,36 +315,36 @@ collections:
               - name: cta_cfg
                 label: "CTA · 内容"
                 widget: object
-                collapsed: false
+                collapsed: true
                 condition: { field: type, value: cta }
                 fields:
-                  - { name: heading, label: "标题", widget: string }
-                  - { name: sub, label: "副标题", widget: text }
+                  - { name: heading, label: "标题", widget: string, required: false }
+                  - { name: sub, label: "副标题", widget: text, required: false }
 
               # ========== richtext_cfg ==========
               - name: richtext_cfg
                 label: "纯文字段落 · 内容"
                 widget: object
-                collapsed: false
+                collapsed: true
                 condition: { field: type, value: richtext }
                 fields:
-                  - { name: heading, label: "小标题 / 引言", widget: string }
+                  - { name: heading, label: "小标题 / 引言", widget: string, required: false }
                   - name: bio
                     label: "正文段落"
                     widget: list
-                    field: { name: para, label: "段落", widget: text }
-                  - { name: callout, label: "高亮金句（可选）", widget: string }
+                    field: { name: para, label: "段落", widget: text, required: false }
+                  - { name: callout, label: "高亮金句（可选）", widget: string, required: false }
 
               # ========== image_cfg ==========
               - name: image_cfg
                 label: "单图 · 内容"
                 widget: object
-                collapsed: false
+                collapsed: true
                 condition: { field: type, value: image }
                 fields:
                   - { name: image, label: "图片", widget: image }
-                  - { name: caption, label: "图说（可选）", widget: string }
-                  - { name: link, label: "点击跳转链接（可选）", widget: string }
+                  - { name: caption, label: "图说（可选）", widget: string, required: false }
+                  - { name: link, label: "点击跳转链接（可选）", widget: string, required: false }
                   - name: ratio
                     label: "显示比例"
                     widget: select
@@ -380,13 +380,13 @@ collections:
             label: "页脚"
             widget: object
             fields:
-              - { name: brand, label: "落款名", widget: string }
-              - { name: role, label: "身份副标题", widget: string }
-              - { name: email, label: "联系邮箱", widget: string }
+              - { name: brand, label: "落款名", widget: string, required: false }
+              - { name: role, label: "身份副标题", widget: string, required: false }
+              - { name: email, label: "联系邮箱", widget: string, required: false }
               - name: nav
                 label: "快速导航"
                 widget: list
                 summary: "{{fields.label}}"
                 fields:
-                  - { name: label, label: "文字", widget: string }
-                  - { name: href, label: "锚点", widget: string, hint: "例如 #about" }
+                  - { name: label, label: "文字", widget: string, required: false }
+                  - { name: href, label: "锚点", widget: string, required: false, hint: "例如 #about" }
