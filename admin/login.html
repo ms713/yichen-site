@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>后台登录 · 尹辰官网</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:"Noto Sans SC",-apple-system,"Segoe UI",sans-serif;background:#0a1422;color:#F4F1EA;
+       display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:24px;}
+  .card{width:100%;max-width:460px;background:rgba(255,255,255,.04);border:1px solid rgba(232,194,104,.18);
+        border-radius:14px;padding:34px 30px;}
+  h1{font-size:20px;margin:0 0 6px;color:#E8C268;font-weight:600;}
+  .sub{font-size:13px;color:#A9B7C6;margin:0 0 24px;line-height:1.7;}
+  label{display:block;font-size:13px;color:#A9B7C6;margin:0 0 8px;}
+  input{width:100%;padding:12px 14px;border-radius:8px;border:1px solid rgba(169,183,198,.28);
+        background:rgba(0,0,0,.28);color:#F4F1EA;font-size:14px;font-family:ui-monospace,Consolas,monospace;}
+  input:focus{outline:none;border-color:#E8C268;}
+  button{width:100%;margin-top:18px;padding:13px;border:0;border-radius:8px;background:#E8C268;color:#0a1422;
+         font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;}
+  button:hover{background:#f0d086;}
+  button:disabled{opacity:.55;cursor:not-allowed;}
+  .ghost{background:transparent;color:#A9B7C6;border:1px solid rgba(169,183,198,.28);margin-top:10px;font-weight:400;font-size:13px;}
+  .ghost:hover{background:rgba(255,255,255,.05);color:#F4F1EA;}
+  .msg{margin-top:16px;font-size:13px;line-height:1.6;padding:12px 14px;border-radius:8px;display:none;}
+  .msg.ok{display:block;background:rgba(72,187,120,.12);border:1px solid rgba(72,187,120,.35);color:#8fe0ab;}
+  .msg.err{display:block;background:rgba(229,90,90,.12);border:1px solid rgba(229,90,90,.35);color:#f0a0a0;}
+  .msg.info{display:block;background:rgba(232,194,104,.10);border:1px solid rgba(232,194,104,.28);color:#e8c268;}
+  .tip{margin-top:22px;padding-top:18px;border-top:1px solid rgba(169,183,198,.15);font-size:12px;color:#7f8fa1;line-height:1.8;}
+  .tip a{color:#E8C268;text-decoration:none;}
+  .tip a:hover{text-decoration:underline;}
+  .state{font-size:12px;color:#7f8fa1;margin-top:14px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>后台登录</h1>
+  <p class="sub">使用 GitHub 个人访问令牌（PAT）登录内容后台。<br>登录状态保存在本机浏览器，下次打开无需重复输入。</p>
+
+  <label for="pat">GitHub Personal Access Token</label>
+  <input id="pat" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_… 或 ghp_…">
+
+  <button id="go">验证并进入后台</button>
+  <button id="clear" class="ghost">清除本机登录状态</button>
+
+  <div id="msg" class="msg"></div>
+  <div id="state" class="state"></div>
+
+  <div class="tip">
+    没有令牌？到 <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener">GitHub 生成 Fine-grained token</a><br>
+    权限要求：仓库 <b>ms713/yichen-site</b> → Contents = <b>Read and write</b>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var REPO_OWNER = 'ms713';
+  var REPO_NAME  = 'yichen-site';
+  var USER_KEY   = 'decap-cms-user';          // Decap 真正读取的登录态 key
+  var LEGACY_KEYS = [                          // 历史调试残留，登录前一并清掉，避免干扰
+    'decap_oauth_token', 'decap_oauth_recovery',
+    'decap-cms-auth', 'decap-cms-auth.github', 'netlify-cms-user'
+  ];
+
+  var $pat = document.getElementById('pat');
+  var $go = document.getElementById('go');
+  var $clear = document.getElementById('clear');
+  var $msg = document.getElementById('msg');
+  var $state = document.getElementById('state');
+
+  function show(kind, html) { $msg.className = 'msg ' + kind; $msg.innerHTML = html; }
+
+  function refreshState() {
+    var raw = null;
+    try { raw = localStorage.getItem(USER_KEY); } catch (e) {}
+    if (raw) {
+      var login = '';
+      try { login = (JSON.parse(raw) || {}).login || ''; } catch (e) {}
+      $state.innerHTML = '当前本机已保存登录态' + (login ? '（' + login + '）' : '') + '，可直接 <a href="./" style="color:#E8C268">进入后台</a>。';
+    } else {
+      $state.textContent = '当前本机未登录。';
+    }
+  }
+
+  function clearAll() {
+    try {
+      localStorage.removeItem(USER_KEY);
+      LEGACY_KEYS.forEach(function (k) { localStorage.removeItem(k); });
+    } catch (e) {}
+  }
+
+  $clear.addEventListener('click', function () {
+    clearAll();
+    show('info', '已清除本机登录状态。');
+    refreshState();
+  });
+
+  $go.addEventListener('click', function () {
+    var token = ($pat.value || '').trim();
+    if (!token) { show('err', '请先粘贴令牌。'); return; }
+
+    $go.disabled = true;
+    show('info', '正在向 GitHub 校验令牌…');
+
+    var headers = { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
+
+    // 1) 校验身份
+    fetch('https://api.github.com/user', { headers: headers })
+      .then(function (r) {
+        if (r.status === 401) throw new Error('令牌无效或已过期（401）。请重新生成一个 token。');
+        if (!r.ok) throw new Error('校验失败：HTTP ' + r.status);
+        return r.json();
+      })
+      // 2) 校验仓库写权限
+      .then(function (user) {
+        return fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME, { headers: headers })
+          .then(function (r) {
+            if (r.status === 404) throw new Error('这个令牌看不到仓库 ' + REPO_OWNER + '/' + REPO_NAME + '。请检查生成 token 时是否勾选了该仓库。');
+            if (!r.ok) throw new Error('读取仓库失败：HTTP ' + r.status);
+            return r.json();
+          })
+          .then(function (repo) {
+            var p = repo.permissions || {};
+            if (!p.push) throw new Error('令牌缺少写权限。请把该仓库的 Contents 权限改成 Read and write。');
+            return user;
+          });
+      })
+      // 3) 写入 Decap 登录态
+      .then(function (user) {
+        clearAll();
+        localStorage.setItem(USER_KEY, JSON.stringify({
+          backendName: 'github',
+          token: token,
+          url: 'https://api.github.com',
+          audience: '',
+          login: user.login || REPO_OWNER,
+          name: user.name || user.login || '',
+          email: user.email || ''
+        }));
+        show('ok', '校验通过（' + (user.login || '') + '，仓库可写）。正在进入后台…');
+        setTimeout(function () { location.href = './'; }, 900);
+      })
+      .catch(function (err) {
+        $go.disabled = false;
+        show('err', String(err.message || err));
+      });
+  });
+
+  $pat.addEventListener('keydown', function (e) { if (e.key === 'Enter') $go.click(); });
+  refreshState();
+})();
+</script>
+</body>
+</html>

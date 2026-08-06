@@ -141,5 +141,34 @@
     }
   })();
   </script>
+
+  <!-- 未登录时给出令牌登录入口。
+       原因：GitHub OAuth 不支持 implicit flow（纯静态页拿不到 token），
+       在没有服务端换 token 之前，用 PAT 登录页作为正式登录方式。 -->
+  <script>
+  (function () {
+    'use strict';
+    setTimeout(function () {
+      var logged = false;
+      try { logged = !!localStorage.getItem('decap-cms-user'); } catch (e) {}
+      if (logged) return;
+
+      var bar = document.createElement('div');
+      bar.setAttribute('style', [
+        'position:fixed', 'right:18px', 'bottom:18px', 'z-index:99999',
+        'background:#0a1422', 'border:1px solid rgba(232,194,104,.4)', 'border-radius:10px',
+        'padding:14px 16px', 'max-width:320px', 'box-shadow:0 8px 28px rgba(0,0,0,.45)',
+        'font-family:"Noto Sans SC",-apple-system,"Segoe UI",sans-serif', 'font-size:13px',
+        'color:#A9B7C6', 'line-height:1.7'
+      ].join(';'));
+      bar.innerHTML =
+        '<div style="color:#E8C268;font-weight:600;margin-bottom:6px">用令牌登录</div>' +
+        'GitHub 按钮暂不可用（需服务端支持）。<br>' +
+        '<a href="./login.html" style="display:inline-block;margin-top:10px;padding:8px 14px;' +
+        'background:#E8C268;color:#0a1422;border-radius:6px;text-decoration:none;font-weight:600">前往登录页 →</a>';
+      document.body.appendChild(bar);
+    }, 2500);
+  })();
+  </script>
 </body>
 </html>

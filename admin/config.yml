@@ -9,9 +9,19 @@ backend:
   name: github
   repo: ms713/yichen-site
   branch: main
-  # 纯静态鉴权页（website/api/auth.html）替代 Netlify 云函数
-  # base_url 是兜底：admin/index.html 会在运行时自动用 location.origin 覆盖，
-  # 所以换平台/换域名无需改这里（GitHub OAuth App 的 callback 还是要同步）。
+  # ⚠️ 重要结论（2026-08-07 定案，勿再重复踩坑）
+  # 「GitHub 登录」按钮目前不可用，原因有两个，第 2 个是死结：
+  #   1. Cloudflare Workers 静态资源默认 html_handling=auto-trailing-slash，
+  #      /api/auth.html 会 307 跳到 /api/auth，导致鉴权页算出的 redirect_uri
+  #      少了 .html，与 GitHub OAuth App 登记的回调不一致 → Invalid Redirect URI。
+  #   2. GitHub 的 OAuth **从不支持 implicit flow**（没有 response_type=token），
+  #      它只会带 ?code=xxx 回来，而 code 换 token 必须用 client_secret，
+  #      也就必须有服务端。纯静态鉴权页在 GitHub 上不可能走通。
+  # 正式登录方式：/admin/login.html（PAT 令牌登录，本机 localStorage 持久保存）。
+  # 彻底方案：给 Cloudflare Worker 加 OAuth 后端（/api/auth + /api/callback），
+  #          届时把 auth_endpoint 改回并同步 GitHub 回调即可。
+  #
+  # base_url 是兜底：admin/index.html 运行时会用 location.origin 覆盖，换域名无需改这里。
   base_url: https://yichen.urchincxj.workers.dev
   auth_endpoint: api/auth.html
   app_id: Ov23lihuWlVNs5RTZ7cI

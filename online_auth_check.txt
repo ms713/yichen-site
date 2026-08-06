@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>授权中…</title>
+<style>
+  body{font-family:"Noto Sans SC",-apple-system,"Segoe UI",sans-serif;background:#0a1422;color:#F4F1EA;
+       display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;padding:24px;}
+  .box{padding:40px;}
+  .spin{width:34px;height:34px;border:3px solid rgba(232,194,104,.25);border-top-color:#E8C268;border-radius:50%;
+        animation:sp 1s linear infinite;margin:0 auto 18px;}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  p{color:#A9B7C6;font-size:15px;line-height:1.6;}
+  b{color:#E8C268;}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="spin"></div>
+  <p id="msg">正在准备 GitHub 授权…</p>
+</div>
+
+<!--
+  纯静态 OAuth 弹窗处理器（替代 Netlify 云函数）
+  - 域名无关：redirect_uri 用 location.origin + pathname，部署到任何域名都能用
+  - 流程：
+    1) 打开本页 → 向父窗口发 "authorizing:github" 握手
+    2) 跳 GitHub implicit flow（response_type=token）
+    3) GitHub 带 #access_token 跳回本页
+    4) 读取 token → 向父窗口发 "authorization:github:success:{json}" + 写 localStorage 兜底
+  - 父窗口（admin/index.html 的 recovery 脚本）监听 storage 事件兜底
+-->
+<script>
+(function () {
+  'use strict';
+  var CLIENT_ID = 'Ov23lihuWlVNs5RTZ7cI';
+  var SCOPE = 'repo';
+  var REDIRECT = location.origin + location.pathname; // 本页自身 URL，作 GitHub 回调
+  var msgEl = document.getElementById('msg');
+
+  function postToOpener(data) {
+    try { if (window.opener) window.opener.postMessage(data, location.origin); } catch (e) {}
+  }
+
+  function finish(token, scope) {
+    var payload = { token: token, provider: 'github', scope: scope || SCOPE };
+    var json = JSON.stringify(payload);
+    // 1) 标准握手消息（字符串格式，Decap NetlifyAuthenticator 期望）
+    postToOpener('authorization:github:success:' + json);
+    // 2) 对象格式兜底
+    postToOpener({ type: 'authorization:github:success', token: token, provider: 'github', scope: payload.scope });
+    // 3) localStorage 兜底：父窗口 recovery 脚本监听 decap_oauth_token 的 storage 事件
+    try {
+      localStorage.setItem('decap_oauth_token', json);
+      localStorage.setItem('decap-cms-user', JSON.stringify({
+        backendName: 'github', token: token, url: REDIRECT, audience: '', login: '', name: '', email: ''
+      }));
+    } catch (e) {}
+    if (msgEl) msgEl.innerHTML = '授权成功，<b>正在返回后台…</b>';
+    setTimeout(function () { try { window.close(); } catch (e) {} }, 400);
+  }
+
+  // —— 情况 A：GitHub 已带 token 跳回（#access_token=...）——
+  var hash = location.hash.replace(/^#/, '');
+  if (hash) {
+    try {
+      var params = new URLSearchParams(hash);
+      var token = params.get('access_token');
+      if (token) { finish(token, params.get('scope')); return; }
+    } catch (e) {}
+  }
+
+  // —— 情况 B：首次打开，先握手再跳转 GitHub ——
+  postToOpener('authorizing:github');
+  if (msgEl) msgEl.innerHTML = '正在跳转到 <b>GitHub 授权</b>…';
+  var gh = 'https://github.com/login/oauth/authorize'
+    + '?client_id=' + encodeURIComponent(CLIENT_ID)
+    + '&redirect_uri=' + encodeURIComponent(REDIRECT)
+    + '&response_type=token'
+    + '&scope=' + encodeURIComponent(SCOPE);
+  // 稍等确保握手送达父窗口
+  setTimeout(function () { window.location.assign(gh); }, 200);
+})();
+</script>
+</body>
+</html>
