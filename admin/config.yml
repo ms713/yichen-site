@@ -10,7 +10,9 @@ backend:
   repo: ms713/yichen-site
   branch: main
   # 纯静态鉴权页（website/api/auth.html）替代 Netlify 云函数
-  # base_url = 当前站点域名（换绑自定义域名后需同步修改这里 + GitHub OAuth 回调）
+  # ⚠️ 下面这个 base_url 只是兜底值：admin/index.html 会在运行时自动把它
+  #    覆盖为当前访问域名（location.origin），所以换平台/换域名无需改这里。
+  #    唯一仍需手动同步的是 GitHub OAuth App 的 Authorization callback URL。
   base_url: https://yichen-site-z4ty5uxg.edgeone.cool
   auth_endpoint: api/auth.html
   app_id: Ov23lihuWlVNs5RTZ7cI

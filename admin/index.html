@@ -121,8 +121,25 @@
   </script>
 </head>
 <body>
-  <!-- Decap CMS 会自动读取同目录下的 config.yml。
-       锁版本到 3.6.4，避免 @3 浮动版本引入新 CSP/eval 兼容问题。 -->
+  <!-- 手动初始化：让 backend.base_url 自动等于当前访问域名。
+       这样无论部署到 EdgeOne / Cloudflare / 自有域名，都不需要再改 config.yml。
+       config.yml 里的 base_url 仅作为兜底值。 -->
+  <script>window.CMS_MANUAL_INIT = true;</script>
+  <!-- 锁版本到 3.6.4，避免 @3 浮动版本引入新 CSP/eval 兼容问题。 -->
   <script src="https://unpkg.com/decap-cms@3.6.4/dist/decap-cms.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var origin = window.location.origin;
+    try {
+      // 传入的 config 会与同目录 config.yml 深度合并，这里只覆盖 base_url
+      window.CMS.init({ config: { backend: { base_url: origin } } });
+      console.log('[Decap] 已按当前域名初始化，base_url =', origin);
+    } catch (e) {
+      console.error('[Decap] 手动初始化失败，回退为读取 config.yml：', e);
+      try { window.CMS.init(); } catch (e2) { console.error('[Decap] 回退初始化也失败：', e2); }
+    }
+  })();
+  </script>
 </body>
 </html>
