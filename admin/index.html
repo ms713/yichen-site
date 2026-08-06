@@ -63,7 +63,7 @@
         var payload = JSON.stringify({ token: pd.token, provider: pd.provider, scope: pd.scope });
         // 关键修复：用 window.postMessage 给当前 origin。
         // 浏览器自动把 e.origin 设为该 origin，使 Decap 内部 NetlifyAuthenticator.authorizeCallback
-        // 的 `r.origin === this.base_url`（'https://yinchen.netlify.app'）检查通过。
+        // 的 `r.origin === this.base_url`（即 config.yml 里配置的站点域名）检查通过。
         // 之前用 dispatchEvent(new MessageEvent(...)) 时 origin=""，永远被 Decap reject。
         window.postMessage('authorization:github:success:' + payload, window.location.origin);
         // 兼容：再发对象格式
@@ -76,7 +76,7 @@
     };
 
     // ===== 路径 2: storage 事件兜底（弹窗写 localStorage 后主窗口接管）=====
-    // 弹窗（与主窗口同源 yinchen.netlify.app）写入 decap_oauth_token 时，
+    // 弹窗（与主窗口同源）写入 decap_oauth_token 时，
     // 主窗口的 storage 事件会触发，我们把 token 提到 RECOVERY_KEY，再 fireRecovery。
     window.addEventListener('storage', function(e) {
       if (e.key === 'decap_oauth_token' && e.newValue) {
