@@ -1,0 +1,8 @@
+.git
+.git/**
+.gitignore
+.assetsignore
+wrangler.jsonc
+edgeone.json
+node_modules
+*.md
