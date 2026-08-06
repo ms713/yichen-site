@@ -1,6 +1,6 @@
-/* 尹辰官网 — 交互脚本
-   功能：从 content.json 渲染内容 + 平滑滚动/移动菜单/入场动画/微信复制/留资弹窗/海报灯箱
-   管理后台：访问 /admin.html 编辑内容；带 ?preview=1 时优先读取 localStorage 预览 */
+/* 尹辰官网 — 交互脚本（模块化版）
+   功能：从 content.json 渲染内容（hero + modules 数组 + footer）+ 平滑滚动/移动菜单/入场动画/微信复制/留资弹窗/海报灯箱
+   管理后台：访问 /admin/ 编辑内容；带 ?preview=1 时优先读取 localStorage 预览 */
 (function () {
   'use strict';
 
@@ -8,225 +8,356 @@
   var content = null;
 
   /* ---------- 小工具 ---------- */
-  function el(id) { return document.getElementById(id); }
-  function setText(id, v) { var e = el(id); if (e && v != null) e.textContent = v; }
-  function setImg(id, src) { var e = el(id); if (e && src) e.src = src; }
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"]/g, function (m) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m];
+  function el(tag, cls, txt) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt != null) e.textContent = txt;
+    return e;
+  }
+  function setText(id, v) { var e = document.getElementById(id); if (e && v != null) e.textContent = v; }
+  function setImg(id, src) { var e = document.getElementById(id); if (e && src) e.src = src; }
+
+  /* 统一给图片套上比例 / 焦点位置（object-fit: cover） */
+  function applyImg(img, ratio, position) {
+    img.style.aspectRatio = (ratio || '760/1280').replace('/', ' / ');
+    img.style.objectPosition = position || 'center';
+    img.style.objectFit = 'cover';
+  }
+
+  /* 图片墙（分享海报 / 画廊）：每张图独立 比例/焦点/占行宽度 */
+  function renderGallery(container, posters) {
+    var spanMap = { full: 'span 3', half: 'span 2', third: 'span 1' };
+    (posters || []).forEach(function (item) {
+      var src, ratio, position, width, title;
+      if (typeof item === 'string') {
+        src = item; ratio = '760/1280'; position = 'center'; width = 'third'; title = '';
+      } else {
+        src = item.poster || '';
+        ratio = item.ratio || '760/1280';
+        position = item.position || 'center';
+        width = item.width || 'third';
+        title = item.title || '';
+      }
+      var wrap = el('figure', 'poster-wrap poster-' + width);
+      wrap.style.gridColumn = spanMap[width] || 'span 1';
+      var img = el('img', 'poster');
+      img.src = src; img.alt = title || '分享海报';
+      applyImg(img, ratio, position);
+      wrap.appendChild(img);
+      if (title) wrap.appendChild(el('figcaption', 'poster-caption', title));
+      container.appendChild(wrap);
     });
+  }
+
+  /* ---------- 模块分发器 ---------- */
+  // 固定锚点：导航栏指向的第一个同类型模块
+  var anchorMap = { about: 'about', courses: 'courses', certs: 'certs', gallery: 'sharing' };
+  var usedAnchor = {};
+
+  function modMedia(m) {
+    var s = el('section', 'media');
+    var w = el('div', 'wrap media-row');
+    var left = el('div', 'media-left');
+    left.appendChild(el('div', 'kicker', 'MEDIA & TALKS'));
+    left.appendChild(el('div', 't', m.title || ''));
+    var btns = el('div', 'media-btns');
+    (m.btns || []).forEach(function (b) {
+      var a = el('a', 'media-btn' + (b.alt ? ' alt' : ''));
+      a.href = b.href || '#'; a.target = '_blank'; a.rel = 'noopener';
+      if (b.icon) a.appendChild(el('span', 'play-ic'));
+      a.appendChild(document.createTextNode(b.label || ''));
+      btns.appendChild(a);
+    });
+    w.appendChild(left); w.appendChild(btns); s.appendChild(w);
+    return s;
+  }
+
+  function modAbout(m) {
+    var s = el('section', 'about');
+    var w = el('div', 'wrap');
+    var head = el('div', 'about-head reveal');
+    head.appendChild(el('div', 'kicker', 'ABOUT'));
+    head.appendChild(el('h2', 'h-sec', m.heading || ''));
+    w.appendChild(head);
+    var bio = el('div', 'about-bio');
+    (m.bio || []).forEach(function (t) { bio.appendChild(el('p', 'about-bio reveal', t)); });
+    w.appendChild(bio);
+    if (m.callout) w.appendChild(el('div', 'callout reveal', m.callout));
+    if (m.advCards) {
+      var g = el('div', 'adv-grid');
+      m.advCards.forEach(function (c) {
+        var d = el('div', 'adv-card reveal');
+        d.appendChild(el('div', 'adv-ic', c.ic || ''));
+        d.appendChild(el('h3', null, c.title || ''));
+        d.appendChild(el('p', null, c.desc || ''));
+        g.appendChild(d);
+      });
+      w.appendChild(g);
+    }
+    s.appendChild(w);
+    return s;
+  }
+
+  function modCourses(m) {
+    var s = el('section', 'courses');
+    var w = el('div', 'wrap');
+    var top = el('div', 'reveal');
+    top.appendChild(el('h2', 'h-sec', m.heading || ''));
+    top.appendChild(el('p', 'sub', m.sub || ''));
+    w.appendChild(top);
+    var g = el('div', 'course-grid');
+    (m.list || []).forEach(function (it) {
+      var a = el('a', 'course-card reveal');
+      a.href = '#contact';
+      a.appendChild(el('h3', null, it.title || ''));
+      a.appendChild(el('p', null, it.desc || ''));
+      g.appendChild(a);
+    });
+    w.appendChild(g);
+    if (m.topics) {
+      var tp = el('div', 'topics reveal');
+      tp.appendChild(el('div', 'kicker', '近期热门授课主题'));
+      var tt = el('div', 'topic-tags');
+      m.topics.forEach(function (t) { tt.appendChild(el('span', 'tag', t)); });
+      tp.appendChild(tt); w.appendChild(tp);
+    }
+    if (m.entBanner) {
+      var eb = el('div', 'ent-banner reveal');
+      var d = el('div');
+      d.appendChild(el('h3', null, m.entBanner.title || ''));
+      d.appendChild(el('p', null, m.entBanner.desc || ''));
+      eb.appendChild(d);
+      var b = el('a', 'btn', m.entBanner.btn || '');
+      b.href = '#contact'; b.setAttribute('data-open-modal', '');
+      eb.appendChild(b);
+      w.appendChild(eb);
+    }
+    s.appendChild(w);
+    return s;
+  }
+
+  function modSystem(m) {
+    var s = el('section', 'system');
+    var w = el('div', 'wrap');
+    var top = el('div', 'reveal');
+    top.appendChild(el('div', 'kicker', m.kicker || 'SYSTEM DELIVERY'));
+    top.appendChild(el('h2', 'h-sec', m.heading || ''));
+    top.appendChild(el('p', 'sub', m.sub || ''));
+    w.appendChild(top);
+    var g = el('div', 'sys-grid');
+    (m.cards || []).forEach(function (c) {
+      var d = el('div', 'sys-card reveal');
+      d.appendChild(el('div', 'adv-ic', c.ic || ''));
+      d.appendChild(el('h3', null, c.title || ''));
+      d.appendChild(el('p', null, c.desc || ''));
+      g.appendChild(d);
+    });
+    w.appendChild(g);
+    s.appendChild(w);
+    return s;
+  }
+
+  function modCerts(m) {
+    var s = el('section', 'certs');
+    var w = el('div', 'wrap');
+    var top = el('div', 'reveal');
+    top.appendChild(el('h2', 'h-sec', m.heading || ''));
+    top.appendChild(el('p', 'sub', m.sub || ''));
+    w.appendChild(top);
+    if (m.highlight) w.appendChild(el('div', 'cert-hl reveal', m.highlight));
+    var g = el('div', 'cert-grid reveal');
+    (m.list || []).forEach(function (t) {
+      var sp = el('span', 'cert-chip');
+      sp.appendChild(el('span', 'dot'));
+      sp.appendChild(document.createTextNode(t));
+      g.appendChild(sp);
+    });
+    w.appendChild(g);
+    s.appendChild(w);
+    return s;
+  }
+
+  function modFlagship(m) {
+    var s = el('section', 'flagship');
+    var w = el('div', 'wrap');
+    var top = el('div', 'reveal');
+    top.appendChild(el('div', 'kicker', m.kicker || 'FLAGSHIP CASE'));
+    top.appendChild(el('h2', 'h-sec', m.heading || ''));
+    w.appendChild(top);
+    var fg = el('div', 'flag-grid');
+    var left = el('div', 'reveal');
+    left.appendChild(el('p', 'flag-text', m.text || ''));
+    var dl = el('ul', 'deliver');
+    (m.deliver || []).forEach(function (t) {
+      var li = el('li');
+      li.appendChild(el('span', 'ck', '✓'));
+      li.appendChild(document.createTextNode(t));
+      dl.appendChild(li);
+    });
+    left.appendChild(dl);
+    fg.appendChild(left);
+    if (m.image) {
+      var img = el('img', 'flag-photo reveal');
+      img.src = m.image;
+      applyImg(img, m.ratio || '809/520', m.position || 'center');
+      fg.appendChild(img);
+    }
+    w.appendChild(fg);
+    s.appendChild(w);
+    return s;
+  }
+
+  function modClients(m) {
+    var s = el('section', 'clients');
+    var w = el('div', 'wrap');
+    var top = el('div', 'reveal');
+    top.appendChild(el('h2', 'h-sec', m.heading || ''));
+    top.appendChild(el('p', 'sub', m.sub || ''));
+    w.appendChild(top);
+    if (m.tags) {
+      var ct = el('div', 'client-tags reveal');
+      m.tags.forEach(function (t) { ct.appendChild(el('span', 'client-tag', t)); });
+      w.appendChild(ct);
+    }
+    var tg = el('div', 'testi');
+    (m.testi || []).forEach(function (t) {
+      var d = el('div', 'testi-card reveal');
+      d.appendChild(el('p', null, t.text || ''));
+      d.appendChild(el('div', 'who', t.who || ''));
+      tg.appendChild(d);
+    });
+    w.appendChild(tg);
+    s.appendChild(w);
+    return s;
+  }
+
+  function modGallery(m) {
+    var s = el('section', 'sharing');
+    var w = el('div', 'wrap');
+    var top = el('div', 'reveal');
+    top.appendChild(el('div', 'kicker', m.kicker || 'SHARING & TALKS'));
+    top.appendChild(el('h2', 'h-sec', m.heading || ''));
+    w.appendChild(top);
+    var g = el('div', 'share-grid reveal');
+    renderGallery(g, m.posters);
+    w.appendChild(g);
+    s.appendChild(w);
+    return s;
+  }
+
+  function modCta(m) {
+    var s = el('section', 'final');
+    var w = el('div', 'wrap reveal');
+    w.appendChild(el('h2', null, m.heading || ''));
+    w.appendChild(el('p', null, m.sub || ''));
+    s.appendChild(w);
+    return s;
+  }
+
+  function modRichtext(m) {
+    var s = el('section', 'about');
+    var w = el('div', 'wrap');
+    var head = el('div', 'about-head reveal');
+    head.appendChild(el('div', 'kicker', 'NOTE'));
+    head.appendChild(el('h2', 'h-sec', m.heading || ''));
+    w.appendChild(head);
+    var bio = el('div', 'about-bio');
+    (m.bio || []).forEach(function (t) { bio.appendChild(el('p', 'about-bio reveal', t)); });
+    w.appendChild(bio);
+    if (m.callout) w.appendChild(el('div', 'callout reveal', m.callout));
+    s.appendChild(w);
+    return s;
+  }
+
+  function modImage(m) {
+    var s = el('section', 'about mod-image');
+    var w = el('div', 'wrap');
+    var fig = el('div', 'fig');
+    var img = el('img', 'flag-photo');
+    img.src = m.image || '';
+    img.alt = m.caption || '图片';
+    applyImg(img, m.ratio || '16/9', m.position || 'center');
+    fig.appendChild(img);
+    if (m.caption) fig.appendChild(el('p', 'poster-caption', m.caption));
+    if (m.link) {
+      var a = el('a');
+      a.href = m.link; a.target = '_blank'; a.rel = 'noopener';
+      a.appendChild(fig); w.appendChild(a);
+    } else {
+      w.appendChild(fig);
+    }
+    s.appendChild(w);
+    return s;
+  }
+
+  var RENDERERS = {
+    media: modMedia, about: modAbout, courses: modCourses, system: modSystem,
+    certs: modCerts, flagship: modFlagship, clients: modClients,
+    gallery: modGallery, cta: modCta, richtext: modRichtext, image: modImage
+  };
+
+  function renderModule(m) {
+    var fn = RENDERERS[m.type];
+    if (!fn) return null;
+    var s = fn(m);
+    if (s && anchorMap[m.type] && !usedAnchor[anchorMap[m.type]]) {
+      s.id = anchorMap[m.type];
+      usedAnchor[anchorMap[m.type]] = true;
+    }
+    return s;
   }
 
   /* ---------- 渲染（数据 → DOM） ---------- */
   function render(c) {
     if (c.siteTitle) document.title = c.siteTitle;
 
-    /* Hero */
-    setText('heroKicker', c.hero.kicker);
-    setText('heroTitle', c.hero.title);
-    setText('heroSub', c.hero.sub);
-    setImg('heroImg', c.images && c.images.hero);
-    var sg = el('statsGrid');
-    if (sg && c.hero.stats) {
-      sg.innerHTML = '';
-      c.hero.stats.forEach(function (s) {
-        var d = document.createElement('div');
-        var n = document.createElement('div'); n.className = 'stat-num'; n.textContent = s.num;
-        var l = document.createElement('div'); l.className = 'stat-label'; l.textContent = s.label;
-        d.appendChild(n); d.appendChild(l); sg.appendChild(d);
+    /* Hero（固定） */
+    if (c.hero) {
+      setText('heroKicker', c.hero.kicker);
+      setText('heroTitle', c.hero.title);
+      setText('heroSub', c.hero.sub);
+      setImg('heroImg', c.images && c.images.hero);
+      var sg = document.getElementById('statsGrid');
+      if (sg && c.hero.stats) {
+        sg.innerHTML = '';
+        c.hero.stats.forEach(function (s) {
+          var d = el('div');
+          d.appendChild(el('div', 'stat-num', s.num));
+          d.appendChild(el('div', 'stat-label', s.label));
+          sg.appendChild(d);
+        });
+      }
+    }
+
+    /* 模块区（动态） */
+    var root = document.getElementById('modulesRoot');
+    if (root) {
+      root.innerHTML = '';
+      (c.modules || []).forEach(function (m) {
+        var s = renderModule(m);
+        if (s) root.appendChild(s);
       });
     }
 
-    /* Media */
-    setText('mediaTitle', c.media.title);
-    var mb = el('mediaBtns');
-    if (mb && c.media.btns) {
-      mb.innerHTML = '';
-      c.media.btns.forEach(function (b) {
-        var a = document.createElement('a');
-        a.className = 'media-btn' + (b.alt ? ' alt' : '');
-        a.href = b.href || '#'; a.target = '_blank'; a.rel = 'noopener';
-        if (b.icon) { var ic = document.createElement('span'); ic.className = 'play-ic'; a.appendChild(ic); }
-        a.appendChild(document.createTextNode(b.label || ''));
-        mb.appendChild(a);
-      });
-    }
-
-    /* About */
-    setText('aboutHeading', c.about.heading);
-    var ab = el('aboutBio');
-    if (ab && c.about.bio) {
-      ab.innerHTML = '';
-      c.about.bio.forEach(function (t) {
-        var p = document.createElement('p'); p.className = 'about-bio reveal'; p.textContent = t; ab.appendChild(p);
-      });
-    }
-    setText('aboutCallout', c.about.callout);
-    var ag = el('advGrid');
-    if (ag && c.about.advCards) {
-      ag.innerHTML = '';
-      c.about.advCards.forEach(function (card) {
-        var d = document.createElement('div'); d.className = 'adv-card reveal';
-        var ic = document.createElement('div'); ic.className = 'adv-ic'; ic.textContent = card.ic || '';
-        var h = document.createElement('h3'); h.textContent = card.title || '';
-        var p = document.createElement('p'); p.textContent = card.desc || '';
-        d.appendChild(ic); d.appendChild(h); d.appendChild(p); ag.appendChild(d);
-      });
-    }
-
-    /* Courses */
-    setText('coursesHeading', c.courses.heading);
-    setText('coursesSub', c.courses.sub);
-    var cg = el('courseGrid');
-    if (cg && c.courses.list) {
-      cg.innerHTML = '';
-      c.courses.list.forEach(function (it) {
-        var a = document.createElement('a'); a.className = 'course-card reveal'; a.href = '#contact';
-        var h = document.createElement('h3'); h.textContent = it.title || '';
-        var p = document.createElement('p'); p.textContent = it.desc || '';
-        a.appendChild(h); a.appendChild(p); cg.appendChild(a);
-      });
-    }
-    var tt = el('topicTags');
-    if (tt && c.courses.topics) {
-      tt.innerHTML = '';
-      c.courses.topics.forEach(function (t) {
-        var s = document.createElement('span'); s.className = 'tag'; s.textContent = t; tt.appendChild(s);
-      });
-    }
-    setText('entTitle', c.courses.entBanner.title);
-    setText('entDesc', c.courses.entBanner.desc);
-    setText('entBtn', c.courses.entBanner.btn);
-
-    /* System */
-    setText('systemHeading', c.system.heading);
-    setText('systemSub', c.system.sub);
-    var sy = el('sysGrid');
-    if (sy && c.system.cards) {
-      sy.innerHTML = '';
-      c.system.cards.forEach(function (card) {
-        var d = document.createElement('div'); d.className = 'sys-card reveal';
-        var ic = document.createElement('div'); ic.className = 'adv-ic'; ic.textContent = card.ic || '';
-        var h = document.createElement('h3'); h.textContent = card.title || '';
-        var p = document.createElement('p'); p.textContent = card.desc || '';
-        d.appendChild(ic); d.appendChild(h); d.appendChild(p); sy.appendChild(d);
-      });
-    }
-
-    /* Certs */
-    setText('certsHeading', c.certs.heading);
-    setText('certsSub', c.certs.sub);
-    setText('certHl', c.certs.highlight);
-    var cg2 = el('certGrid');
-    if (cg2 && c.certs.list) {
-      cg2.innerHTML = '';
-      c.certs.list.forEach(function (t) {
-        var s = document.createElement('span'); s.className = 'cert-chip';
-        var dot = document.createElement('span'); dot.className = 'dot'; s.appendChild(dot);
-        s.appendChild(document.createTextNode(t)); cg2.appendChild(s);
-      });
-    }
-
-    /* Flagship */
-    setText('flagHeading', c.flagship.heading);
-    setText('flagText', c.flagship.text);
-    setImg('flagImg', c.images && c.images.flagship);
-    var dl = el('deliverList');
-    if (dl && c.flagship.deliver) {
-      dl.innerHTML = '';
-      c.flagship.deliver.forEach(function (t) {
-        var li = document.createElement('li');
-        var ck = document.createElement('span'); ck.className = 'ck'; ck.textContent = '✓';
-        li.appendChild(ck); li.appendChild(document.createTextNode(t)); dl.appendChild(li);
-      });
-    }
-
-    /* Clients */
-    setText('clientsHeading', c.clients.heading);
-    setText('clientsSub', c.clients.sub);
-    var ct = el('clientTags');
-    if (ct && c.clients.tags) {
-      ct.innerHTML = '';
-      c.clients.tags.forEach(function (t) {
-        var s = document.createElement('span'); s.className = 'client-tag'; s.textContent = t; ct.appendChild(s);
-      });
-    }
-    // 客户案例区块已不放照片（统一在 sharing 区块展示）
-    var tg = el('testiGrid');
-    if (tg && c.clients.testi) {
-      tg.innerHTML = '';
-      c.clients.testi.forEach(function (t) {
-        var d = document.createElement('div'); d.className = 'testi-card reveal';
-        var p = document.createElement('p'); p.textContent = t.text || '';
-        var w = document.createElement('div'); w.className = 'who'; w.textContent = t.who || '';
-        d.appendChild(p); d.appendChild(w); tg.appendChild(d);
-      });
-    }
-
-    /* Sharing - 每张海报独立配置（比例 / 焦点位置 / 占行宽度） */
-    setText('sharingHeading', c.sharing.heading);
-    var sh = el('shareGrid');
-    if (sh && c.sharing.posters) {
-      sh.className = 'share-grid reveal';
-      sh.innerHTML = '';
-      // 兜底：每张图的占行 grid-column span（每行 3 列）
-      var spanMap = { full: 'span 3', half: 'span 2', third: 'span 1' };
-      c.sharing.posters.forEach(function (item) {
-        // 兼容老格式（字符串数组）与新格式（对象数组）
-        var src, ratio, position, width, title;
-        if (typeof item === 'string') {
-          src = item;
-          ratio = '760/1280';
-          position = 'center';
-          width = 'third';
-          title = '';
-        } else {
-          src = item.poster || '';
-          ratio = item.ratio || '760/1280';
-          position = item.position || 'center';
-          width = item.width || 'third';
-          title = item.title || '';
-        }
-        var wrap = document.createElement('figure');
-        wrap.className = 'poster-wrap poster-' + width;
-        wrap.style.gridColumn = spanMap[width] || 'span 1';
-        var img = document.createElement('img');
-        img.className = 'poster';
-        img.src = src;
-        img.alt = title || '线上分享海报';
-        img.style.aspectRatio = ratio.replace('/', ' / ');
-        img.style.objectPosition = position;
-        wrap.appendChild(img);
-        if (title) {
-          var cap = document.createElement('figcaption');
-          cap.className = 'poster-caption';
-          cap.textContent = title;
-          wrap.appendChild(cap);
-        }
-        sh.appendChild(wrap);
-      });
-    }
-
-    /* Final */
-    setText('finalHeading', c.final.heading);
-    setText('finalSub', c.final.sub);
-
-    /* Footer */
-    setText('footBrand', c.footer.brand);
-    setText('footRole', c.footer.role);
-    var mail = el('footEmail');
-    if (mail) {
-      mail.textContent = '邮箱：' + (c.footer.email || '');
-      if (c.footer.email) mail.href = 'mailto:' + c.footer.email;
-    }
-    setImg('wechatImg', c.images && c.images.wechat);
-    var fn = el('footNav');
-    if (fn && c.footer.nav) {
-      fn.innerHTML = '';
-      c.footer.nav.forEach(function (n) {
-        var a = document.createElement('a'); a.href = n.href || '#'; a.textContent = n.label || '';
-        fn.appendChild(a);
-      });
+    /* Footer（固定） */
+    if (c.footer) {
+      setText('footBrand', c.footer.brand);
+      setText('footRole', c.footer.role);
+      var mail = document.getElementById('footEmail');
+      if (mail) {
+        mail.textContent = '邮箱：' + (c.footer.email || '');
+        if (c.footer.email) mail.href = 'mailto:' + c.footer.email;
+      }
+      setImg('wechatImg', c.images && c.images.wechat);
+      var fn = document.getElementById('footNav');
+      if (fn && c.footer.nav) {
+        fn.innerHTML = '';
+        c.footer.nav.forEach(function (n) {
+          var a = el('a', null, n.label || '');
+          a.href = n.href || '#';
+          fn.appendChild(a);
+        });
+      }
     }
   }
 
@@ -252,9 +383,9 @@
 
   /* ---------- 交互（在内容渲染后初始化） ---------- */
   function initInteractions() {
-    var modal = el('leadModal');
-    var form = el('leadForm');
-    var successPanel = el('modalSuccess');
+    var modal = document.getElementById('leadModal');
+    var form = document.getElementById('leadForm');
+    var successPanel = document.getElementById('modalSuccess');
 
     document.querySelectorAll('[data-open-modal]').forEach(function (btn) {
       btn.addEventListener('click', function (e) { e.preventDefault(); openModal(); });
@@ -277,7 +408,7 @@
       }, 300);
     }
 
-    var closeBtn = el('modalClose');
+    var closeBtn = document.getElementById('modalClose');
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (modal) {
       modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
@@ -285,14 +416,14 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && modal && modal.classList.contains('active')) closeModal();
     });
-    var okBtn = el('successOk');
+    var okBtn = document.getElementById('successOk');
     if (okBtn) okBtn.addEventListener('click', closeModal);
 
     /* 表单提交 */
     if (form) {
       form.addEventListener('submit', function (e) {
         e.preventDefault();
-        var submitBtn = el('submitBtn');
+        var submitBtn = document.getElementById('submitBtn');
         if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '提交中…'; }
         var formData = new FormData(form);
         fetch(form.action, { method: 'POST', body: formData })

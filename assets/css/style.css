@@ -213,6 +213,11 @@ section { padding:84px 0; }
 .poster:hover { transform:translateY(-6px); box-shadow:0 22px 50px rgba(0,0,0,.5); }
 .poster-caption { color:var(--text-dim); font-size:14px; margin-top:8px; text-align:center; line-height:1.5; }
 
+/* ---------- 单图模块（mod-image） ---------- */
+.mod-image .fig { max-width:780px; margin:0 auto; text-align:center; }
+.mod-image .fig .flag-photo { aspect-ratio:16 / 9; }
+.mod-image .fig .poster-caption { margin-top:10px; }
+
 /* ---------- Final CTA ---------- */
 .final { background:var(--card-2); text-align:center; }
 .final h2 { font-size:40px; }

@@ -28,7 +28,7 @@
   </div>
 </header>
 
-<!-- ============ Hero 首屏（内容来自 content.json） ============ -->
+<!-- ============ Hero 首屏（固定，内容来自 content.json 的 hero 字段） ============ -->
 <section class="hero" id="home">
   <div class="wrap hero-grid">
     <div class="hero-left">
@@ -47,125 +47,10 @@
   </div>
 </section>
 
-<!-- ============ Media 媒体背书 ============ -->
-<section class="media">
-  <div class="wrap media-row">
-    <div class="media-left">
-      <div class="kicker">MEDIA &amp; TALKS</div>
-      <div class="t" id="mediaTitle"></div>
-    </div>
-    <div class="media-btns" id="mediaBtns"></div>
-  </div>
-</section>
+<!-- ============ 页面主体：模块区（由 main.js 按 content.json 的 modules 数组动态渲染） ============ -->
+<main id="modulesRoot"></main>
 
-<!-- ============ About 关于尹辰 ============ -->
-<section class="about" id="about">
-  <div class="wrap">
-    <div class="about-head reveal">
-      <div class="kicker">ABOUT</div>
-      <h2 class="h-sec" id="aboutHeading"></h2>
-    </div>
-    <div id="aboutBio"></div>
-    <div class="callout reveal" id="aboutCallout"></div>
-    <div class="adv-grid" id="advGrid"></div>
-  </div>
-</section>
-
-<!-- ============ Courses 课程体系 ============ -->
-<section class="courses" id="courses">
-  <div class="wrap">
-    <div class="reveal">
-      <h2 class="h-sec" id="coursesHeading"></h2>
-      <p class="sub" id="coursesSub"></p>
-    </div>
-    <div class="course-grid" id="courseGrid"></div>
-    <div class="topics reveal">
-      <div class="kicker">近期热门授课主题</div>
-      <div class="topic-tags" id="topicTags"></div>
-    </div>
-    <div class="ent-banner reveal">
-      <div>
-        <h3 id="entTitle"></h3>
-        <p id="entDesc"></p>
-      </div>
-      <a class="btn" data-open-modal id="entBtn"></a>
-    </div>
-  </div>
-</section>
-
-<!-- ============ System 数字化交付 ============ -->
-<section class="system" id="system">
-  <div class="wrap">
-    <div class="reveal">
-      <div class="kicker">SYSTEM DELIVERY</div>
-      <h2 class="h-sec" id="systemHeading"></h2>
-      <p class="sub" id="systemSub"></p>
-    </div>
-    <div class="sys-grid" id="sysGrid"></div>
-  </div>
-</section>
-
-<!-- ============ Certs 专业认证 ============ -->
-<section class="certs" id="certs">
-  <div class="wrap">
-    <div class="reveal">
-      <h2 class="h-sec" id="certsHeading"></h2>
-      <p class="sub" id="certsSub"></p>
-    </div>
-    <div class="cert-hl reveal" id="certHl"></div>
-    <div class="cert-grid reveal" id="certGrid"></div>
-  </div>
-</section>
-
-<!-- ============ Flagship 旗舰案例 ============ -->
-<section class="flagship" id="flagship">
-  <div class="wrap">
-    <div class="reveal">
-      <div class="kicker">FLAGSHIP CASE</div>
-      <h2 class="h-sec" id="flagHeading"></h2>
-    </div>
-    <div class="flag-grid">
-      <div class="reveal">
-        <p class="flag-text" id="flagText"></p>
-        <ul class="deliver" id="deliverList"></ul>
-      </div>
-      <img class="flag-photo reveal" id="flagImg" src="" alt="国企新锐训练营现场">
-    </div>
-  </div>
-</section>
-
-<!-- ============ Clients 客户案例 ============ -->
-<section class="clients" id="clients">
-  <div class="wrap">
-    <div class="reveal">
-      <h2 class="h-sec" id="clientsHeading"></h2>
-      <p class="sub" id="clientsSub"></p>
-    </div>
-    <div class="client-tags reveal" id="clientTags"></div>
-    <div class="testi" id="testiGrid"></div>
-  </div>
-</section>
-
-<!-- ============ Sharing 线上分享 ============ -->
-<section class="sharing" id="sharing">
-  <div class="wrap">
-    <div class="reveal">
-      <div class="kicker">SHARING &amp; TALKS</div>
-      <h2 class="h-sec" id="sharingHeading"></h2>
-    </div>
-    <div class="share-grid reveal" id="shareGrid"></div>
-  </div>
-</section>
-
-<!-- ============ Final CTA ============ -->
-<section class="final">
-  <div class="wrap reveal">
-    <h2 id="finalHeading"></h2>
-    <p id="finalSub"></p>
-  </div>
-</section>
-
-<!-- ============ Footer / 联系 ============ -->
+<!-- ============ Footer / 联系（固定） ============ -->
 <footer class="footer" id="contact">
   <div class="wrap">
     <div class="foot-body">
