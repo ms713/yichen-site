@@ -10,8 +10,8 @@ backend:
   repo: ms713/yichen-site
   branch: main
   # 纯静态鉴权页（website/api/auth.html）替代 Netlify 云函数
-  # base_url 改成你部署后的 EdgeOne 域名（见下方注释）
-  base_url: https://CHANGE-ME.edgeone.app
+  # base_url = 当前站点域名（换绑自定义域名后需同步修改这里 + GitHub OAuth 回调）
+  base_url: https://yichen-site-z4ty5uxg.edgeone.cool
   auth_endpoint: api/auth.html
   app_id: Ov23lihuWlVNs5RTZ7cI
 
