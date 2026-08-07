@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>前台编辑器 · 尹辰官网</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  /* ====== 编辑器专属样式 ====== */
+  body.edit-mode { padding-top: 56px; background: var(--bg, #0f1115); }
+  body.edit-mode .reveal { opacity: 1 !important; transform: none !important; }
+
+  .edit-bar { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: #1a1a1a; color: #fff; display: flex; align-items: center; padding: 0 16px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,.3); gap: 8px; }
+  .edit-bar .title { font-weight: 500; font-size: 14px; color: #f1c870; }
+  .edit-bar .title small { color: #888; font-weight: 400; margin-left: 6px; font-size: 12px; }
+  .edit-bar .spacer { flex: 1; }
+  .edit-bar button { background: #2a2a2a; color: #fff; border: 1px solid #3a3a3a; padding: 7px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .edit-bar button:hover:not(:disabled) { background: #3a3a3a; }
+  .edit-bar button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .edit-bar button.primary { background: #1d9e75; border-color: #1d9e75; }
+  .edit-bar button.primary:hover:not(:disabled) { background: #15915c; }
+  .edit-bar button.danger { background: #791f1f; border-color: #791f1f; }
+
+  .dirty-badge { font-size: 12px; padding: 5px 10px; border-radius: 12px; }
+  .dirty-badge.is-dirty { background: #ef9f27; color: #1a1a1a; font-weight: 500; }
+  .dirty-badge.is-clean { background: #2a2a2a; color: #888; }
+
+  /* 可编辑节点 hover 高亮 */
+  body.edit-mode [data-yc-type] { outline: 2px dashed transparent; outline-offset: 3px; cursor: pointer; transition: outline-color .12s; }
+  body.edit-mode [data-yc-type]:hover { outline-color: #1d9e75; }
+  body.edit-mode img[data-yc-type]:hover { outline: 2px solid #1d9e75; outline-style: dashed; }
+
+  /* ====== 登录面板 ====== */
+  .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0f1115; padding: 24px; font-family: var(--font-sans, sans-serif); }
+  .login-card { background: #1a1a1a; border-radius: 12px; padding: 32px; max-width: 480px; width: 100%; color: #ddd; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+  .login-card h1 { color: #f1c870; font-size: 22px; margin: 0 0 6px; font-weight: 500; }
+  .login-card .sub { color: #888; font-size: 13px; line-height: 1.6; margin: 0 0 20px; }
+  .login-card label { display: block; font-size: 12px; color: #999; margin-bottom: 6px; }
+  .login-card input { width: 100%; box-sizing: border-box; background: #0f1115; color: #fff; border: 1px solid #3a3a3a; padding: 11px 12px; border-radius: 6px; font: inherit; font-size: 14px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .login-card input:focus { outline: none; border-color: #1d9e75; }
+  .login-card button { width: 100%; background: #1d9e75; color: #fff; border: none; padding: 12px; border-radius: 6px; font: inherit; font-size: 14px; font-weight: 500; margin-top: 14px; cursor: pointer; }
+  .login-card button:hover:not(:disabled) { background: #15915c; }
+  .login-card button:disabled { opacity: 0.6; cursor: not-allowed; }
+  .login-card .err { color: #e24b4a; font-size: 12px; margin-top: 12px; min-height: 16px; }
+  .login-card .help { margin-top: 20px; padding-top: 20px; border-top: 1px solid #2a2a2a; font-size: 12px; color: #666; line-height: 1.6; }
+  .login-card .help b { color: #999; font-weight: 500; }
+
+  /* ====== 侧边面板 ====== */
+  .side-panel { position: fixed; top: 56px; right: 0; bottom: 0; width: 320px; background: #1a1a1a; color: #ddd; border-left: 1px solid #2a2a2a; z-index: 999; padding: 56px 16px 16px; overflow-y: auto; box-shadow: -8px 0 24px rgba(0,0,0,.3); }
+  .side-panel h2 { font-size: 14px; color: #f1c870; margin: 0 0 12px; font-weight: 500; }
+  .side-panel .mod-row { display: flex; align-items: center; padding: 8px 10px; background: #2a2a2a; border-radius: 6px; margin-bottom: 6px; font-size: 13px; gap: 8px; }
+  .side-panel .mod-label { flex: 1; }
+  .side-panel .mod-tools { display: flex; gap: 4px; }
+  .side-panel .mod-tools button { background: #3a3a3a; color: #fff; border: none; width: 28px; height: 28px; border-radius: 5px; cursor: pointer; font-size: 14px; }
+  .side-panel .mod-tools button:hover { background: #4a4a4a; }
+  .side-panel .mod-tools button.mod-del { background: #791f1f; }
+  .side-panel .mod-tools button.mod-del:hover { background: #a32d2d; }
+  .side-panel .add-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .side-panel .add-list button { background: #2a2a2a; color: #ddd; border: 1px solid #3a3a3a; padding: 10px 8px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .side-panel .add-list button:hover { background: #3a3a3a; border-color: #1d9e75; }
+  .side-panel .close-btn { position: absolute; top: 12px; right: 12px; background: #3a3a3a; color: #fff; border: none; width: 30px; height: 30px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+  .side-panel .close-btn:hover { background: #4a4a4a; }
+  .side-panel .empty { color: #666; font-size: 12px; padding: 20px; text-align: center; }
+
+  /* 编辑时隐藏"管理后台"入口 */
+  body.edit-mode a[href="admin/"], body.edit-mode a[href*="admin/"] { display: none !important; }
+</style>
+</head>
+<body class="edit-mode">
+
+<!-- ============ 登录面板 ============ -->
+<div id="loginPanel" class="login-wrap" style="display:none">
+  <div class="login-card">
+    <h1>前台编辑器</h1>
+    <p class="sub">粘贴 GitHub Personal Access Token 开始编辑。点击页面任意文字/图片直接修改，顶部"发布"按钮一键提交到 GitHub。</p>
+    <label>GitHub PAT</label>
+    <input id="patInput" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+    <button id="loginBtn">登录</button>
+    <div class="err" id="loginErr"></div>
+    <div class="help">
+      <b>Token 怎么生成？</b><br>
+      GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → New token<br>
+      · Repository access: 选 <b>ms713/yichen-site</b><br>
+      · Permissions → Contents = <b>Read and write</b><br>
+      Token 只保存在你本地浏览器，不会上传。
+    </div>
+  </div>
+</div>
+
+<!-- ============ 顶部编辑栏 ============ -->
+<div class="edit-bar" id="editorPanel" style="display:none">
+  <span class="title">尹辰官网 · 编辑模式 <small>改动后必须点「发布」</small></span>
+  <span class="spacer"></span>
+  <span class="dirty-badge is-clean" id="dirtyBadge">○ 无改动</span>
+  <button id="openModBtn">≡ 模块管理</button>
+  <button id="openAddBtn">+ 添加模块</button>
+  <button class="primary" id="publishBtn">发布到 GitHub</button>
+  <button class="danger" id="logoutBtn">退出</button>
+</div>
+
+<!-- ============ 顶栏 Header（与访客页一致） ============ -->
+<header class="header">
+  <div class="wrap">
+    <a class="brand" href="#home">
+      <span class="brand-mark">尹</span>
+      <span>
+        <span class="brand-name">尹辰</span><br>
+        <span class="brand-sub">YINCHEN</span>
+      </span>
+    </a>
+    <a class="btn cta-head" data-open-modal>预约合作</a>
+    <button class="menu-btn" aria-label="菜单">☰</button>
+  </div>
+</header>
+
+<!-- ============ Hero 首屏 ============ -->
+<section class="hero" id="home">
+  <div class="wrap hero-grid">
+    <div class="hero-left">
+      <span class="hero-kicker" id="heroKicker"></span>
+      <h1 id="heroTitle"></h1>
+      <p class="hero-sub" id="heroSub"></p>
+      <div class="cta-row">
+        <a class="btn" data-open-modal>预约企业内训</a>
+        <a class="btn btn-ghost" href="#courses">查看完整课程体系</a>
+      </div>
+      <div class="stats" id="statsGrid"></div>
+    </div>
+    <div class="portrait-wrap">
+      <img class="portrait" id="heroImg" src="" alt="尹辰形象照">
+    </div>
+  </div>
+</section>
+
+<!-- ============ 页面主体（由 YC.render 动态渲染） ============ -->
+<main id="modulesRoot"></main>
+
+<!-- ============ Footer ============ -->
+<footer class="footer" id="contact">
+  <div class="wrap">
+    <div class="foot-body">
+      <div>
+        <div class="foot-brand" id="footBrand"></div>
+        <div class="role" id="footRole"></div>
+      </div>
+      <div class="foot-col">
+        <h4>联系方式</h4>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <img id="wechatImg" src="" alt="微信二维码" style="width:100px;height:100px;border-radius:10px;border:1px solid rgba(232,194,104,.3);">
+        </div>
+        <a id="footEmail" href=""></a>
+      </div>
+      <div class="foot-col">
+        <h4>快速导航</h4>
+        <div id="footNav"></div>
+      </div>
+    </div>
+    <div class="foot-bottom">2026 尹辰 · 保留所有权利</div>
+  </div>
+</footer>
+
+<!-- ============ 留资弹窗 Modal（与访客页一致） ============ -->
+<div class="modal-overlay" id="leadModal">
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose" aria-label="关闭">&times;</button>
+    <div class="modal-head">
+      <h3>预约咨询</h3>
+      <p>留下您的联系方式，尹辰将在 24 小时内与您联系</p>
+    </div>
+    <form class="lead-form" id="leadForm" action="https://formsubmit.co/joyeat@163.com" method="POST">
+      <input type="hidden" name="_subject" value="📋 尹辰官网留资 - 新咨询需求">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_template" value="table">
+      <div class="field">
+        <label for="lf-name">姓名 <span class="req">*</span></label>
+        <input type="text" id="lf-name" name="name" placeholder="您的姓名" required>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="lf-company">公司/机构</label>
+          <input type="text" id="lf-company" name="company" placeholder="选填">
+        </div>
+        <div class="field">
+          <label for="lf-phone">手机/微信 <span class="req">*</span></label>
+          <input type="tel" id="lf-phone" name="phone" placeholder="联系方式" required>
+        </div>
+      </div>
+      <div class="field">
+        <label for="lf-type">咨询类型</label>
+        <select id="lf-type" name="type">
+          <option value="企业内训">企业内训 / 团队培训</option>
+          <option value="个人课程">个人提效课程</option>
+          <option value="数字化系统">数字化系统交付</option>
+          <option value="公开课/分享">公开课 / 线上分享</option>
+          <option value="其他">其他合作</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="lf-msg">补充说明</label>
+        <textarea id="lf-msg" name="message" rows="3" placeholder="简要描述您的需求（选填）"></textarea>
+      </div>
+      <button type="submit" class="btn btn-submit" id="submitBtn">提交预约</button>
+      <p class="form-note">✉️ 信息将安全发送至 joyeat@163.com，我们承诺保密</p>
+    </form>
+    <div class="modal-success" id="modalSuccess" style="display:none;">
+      <div class="success-icon">✓</div>
+      <h3>提交成功！</h3>
+      <p>感谢您的信任，尹辰将尽快与您联系。</p>
+      <button class="btn" id="successOk">好的</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 模块管理面板 ============ -->
+<div id="modPanel" class="side-panel" style="display:none">
+  <button class="close-btn" id="closeModBtn">×</button>
+  <h2>模块管理</h2>
+  <div id="modList"></div>
+  <div class="empty" id="modEmpty" style="display:none">还没有任何模块</div>
+</div>
+
+<!-- ============ 添加模块面板 ============ -->
+<div id="addPanel" class="side-panel" style="display:none">
+  <button class="close-btn" id="closeAddBtn">×</button>
+  <h2>添加新模块</h2>
+  <div class="add-list" id="addList"></div>
+</div>
+
+<script src="assets/js/main.js"></script>
+<script src="assets/js/editor.js"></script>
+</body>
+</html>
